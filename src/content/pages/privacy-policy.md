@@ -1,5 +1,5 @@
 ---
-title: "Privacy Policy - පුද්ගලිකත්ව ප්‍රතිපත්තිය"
+title: "Privacy Policy"
 meta_title: "Privacy Policy - Sinhala Wal Katha"
 description: "Wal Katha වෙබ් අඩවියේ පුද්ගලිකත්ව ප්‍රතිපත්තිය. අපගේ පරිශීලකයින්ගේ දත්ත ආරක්ෂාව පිළිබඳ සම්පූර්ණ විස්තරය මෙතැනින් කියවන්න."
 draft: false

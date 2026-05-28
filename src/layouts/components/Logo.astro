@@ -17,7 +17,7 @@ const {
 } = config.site;
 ---
 
-<a href="/" class="navbar-brand block">
+<a href="/" class="navbar-brand block" itemprop="url">
   {
     src || logo ? (
       <Image
@@ -25,15 +25,16 @@ const {
         height={logo_height.replace("px", "") * 2}
         src={src ? src : logo}
         alt={title}
-        style={{
+        itemprop="logo"
+        loading="eager" fetchpriority="high" style={{
           height: logo_height.replace("px", "") + "px",
           width: logo_width.replace("px", "") + "px",
         }}
       />
     ) : logo_text ? (
-      logo_text
+      <span itemprop="name" class="font-bold">{logo_text}</span>
     ) : (
-      title
+      <span itemprop="name" class="font-bold">{title}</span>
     )
   }
 </a>

@@ -7,7 +7,28 @@ import { render } from "astro:content";
 const { author } = Astro.props;
 const { title, image, social } = author.data;
 const { Content } = await render(author);
+
+// Astro සයිට් එකේ දැනට බලන පිටුවේ සම්පූර්ණ URL එක ගැනීම
+const currentUrl = Astro.url.href;
+
+// ලේඛකයාගේ සමාජ මාධ්‍ය ලින්ක්ස් Schema එකට ගැළපෙන ලිස්ට් එකක් බවට හැරවීම
+const socialLinks = social ? social.map((item: { url: string }) => item.url) : [];
+
+// Google වෙනුවෙන් පිරිසිදු JSON-LD Schema Markup එක සකස් කිරීම
+const authorSchema = {
+  "@context": "https://schema.org",
+  "@type": "ProfilePage",
+  "mainEntity": {
+    "@type": "Person",
+    "name": title,
+    "url": currentUrl,
+    ...(image && { "image": new URL(image, Astro.site || currentUrl).href }),
+    ...(socialLinks.length > 0 && { "sameAs": socialLinks })
+  }
+};
 ---
+
+<script type="application/ld+json" set:html={JSON.stringify(authorSchema)} />
 
 <section class="section">
   <div class="container">

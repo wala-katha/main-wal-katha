@@ -6,7 +6,7 @@ slug: "Walka"
 date: 2026-05-30
 image: "/images/posts/06.jpg"
 draft: false
-authors: ["wala katha"]
+authors: ["වල් කතා"]
 tags: ["sinhala-katha", "wala-katha", "wal-katha"]
 categories: ["lifestyle"]
 ---

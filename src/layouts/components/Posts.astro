@@ -24,7 +24,7 @@ const { className, posts, fluid } = Astro.props;
       <div class={i === 0 && fluid != false ? "col-12" : "col-12 sm:col-6"}>
         {post.data.image && (
           <a
-            href={`/blog/${post.id}`} // FIX: බැක්ටික් ඇතුළේ මුලටම ස්ලෑෂ් (/) එක දැම්මා. එතකොට ඕතර් පේජ් එකේදී ලින්ක් එක පටලවා නොගෙන කෙලින්ම සයිට් එකේ මුලටම (Root) යනවා.
+            href={`/blog/${post.id}/`} // URL එක වෙනස් කළේ නැත, අගට නිවැරදිව Trailing Slash එක පමණක් තැබුවා
             class="rounded-lg block hover:text-primary overflow-hidden group"
           >
             <Image
@@ -33,7 +33,7 @@ const { className, posts, fluid } = Astro.props;
               alt={post.data.title}
               width={i === 0 ? 925 : 445}
               height={i === 0 ? 475 : 230}
-              loading={i === 0 ? "eager" : "lazy"}
+              loading={i === 0 ? "eager" : "lazy"} // SEO: පළමු පෝස්ට් එක LCP සඳහා eager කළා
               decoding="async"
             />
           </a>
@@ -88,7 +88,7 @@ const { className, posts, fluid } = Astro.props;
         </ul>
         <h3 class="mb-4">
           <a
-            href={`/blog/${post.id}`} // FIX: මාතෘකාවේ ලින්ක් එකටත් මුලටම ස්ලෑෂ් (/) දමා Absolute Path එකක් බවට පත් කළා.
+            href={`/blog/${post.id}/`}
             class="block hover:text-primary transition duration-300"
           >
             {post.data.title}

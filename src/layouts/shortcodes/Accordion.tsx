@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 
 const Accordion = ({
   title,
@@ -10,10 +10,21 @@ const Accordion = ({
   className?: string;
 }) => {
   const [show, setShow] = useState(false);
+  
+  // SEO & Accessibility: හැම Accordion එකකටම එකිනෙකට වෙනස් ID එකක් ඔටෝ සෑදීම
+  const accordionId = useRef(
+    typeof window !== "undefined" ? Math.random().toString(36).substr(2, 9) : ""
+  );
 
   return (
-    <div className={`accordion ${show && "active"} ${className}`}>
-      <button className="accordion-header" onClick={() => setShow(!show)}>
+    <div className={`accordion ${show ? "active" : ""} ${className || ""}`}>
+      <button
+        className="accordion-header"
+        onClick={() => setShow(!show)}
+        aria-expanded={show} // SEO: ගූගල් බොට්ට මේක දැනට ඇරලාද වැහලාද තියෙන්නේ කියා පවසයි
+        aria-controls={`accordion-panel-${accordionId.current}`} // බටන් එක අදාළ කන්ටෙන්ට් එකට මැප් කිරීම
+        id={`accordion-btn-${accordionId.current}`}
+      >
         {title}
         <svg
           className="accordion-icon"
@@ -21,6 +32,7 @@ const Accordion = ({
           y="0px"
           viewBox="0 0 512 512"
           xmlSpace="preserve"
+          aria-hidden="true" // SEO: රොබෝලාට මේ අයිකන් එක කියවීම මඟහැරීමට
         >
           <path
             fill="currentColor"
@@ -28,7 +40,17 @@ const Accordion = ({
           ></path>
         </svg>
       </button>
-      <div className="accordion-content">{children}</div>
+      
+      <div
+        id={`accordion-panel-${accordionId.current}`}
+        className="accordion-content"
+        role="region" // SEO: මේක ඇතුළේ වෙනම කොටසක් තියෙන බව බොට්ට හැඟවීම
+        aria-labelledby={`accordion-btn-${accordionId.current}`}
+        aria-hidden={!show} // වැහිලා තියෙන වෙලාවට බොට්ස්ලාට සහ Screen Readers වලට හංගන්න
+        style={{ display: show ? "block" : "none" }} // CSS බිඳ වැටීම් වැළැක්වීමට සුරක්ෂිත ක්‍රමය
+      >
+        {children}
+      </div>
     </div>
   );
 };

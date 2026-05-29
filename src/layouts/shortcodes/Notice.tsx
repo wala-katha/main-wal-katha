@@ -8,9 +8,17 @@ function Notice({
   type: string;
   children: React.ReactNode;
 }) {
+  // සෙවුම් යන්ත්‍ර සහ Screen Readers වලට අදාළව නිවැරදි ARIA Role එක තීරණය කිරීම
+  const ariaRole = type === "warning" ? "alert" : "note";
+
   return (
-    <div className={`notice ${type}`}>
-      <div className="notice-head">
+    <div 
+      className={`notice ${type} my-5`} 
+      role={ariaRole} // SEO & UX: ගූගල් බොට්ට මේක සාමාන්‍ය ඩිව් එකක් නෙමෙයි, විශේෂ සටහනක්/දැනුම්දීමක් බව පවසයි
+      aria-label={`${humanize(type)} notice`}
+    >
+      {/* SVG අයිකන වලට aria-hidden දමා සෙවුම් යන්ත්‍ර අකුරු පමණක් කියවීම තහවුරු කිරීම */}
+      <div className="notice-head" aria-hidden="true">
         {type === "tip" ? (
           <svg
             width="20"
@@ -75,7 +83,7 @@ function Notice({
             />
           </svg>
         )}
-        <p className="my-0 ml-1.5">{humanize(type)}</p>
+        <p className="my-0 ml-1.5 font-bold">{humanize(type)}</p>
       </div>
       <div className="notice-body">{children}</div>
     </div>

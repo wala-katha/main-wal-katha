@@ -39,7 +39,7 @@ const Button = ({
       }`}
     >
       {label}
-    </a
+    </a>
   );
 };
 

@@ -55,7 +55,7 @@ const currentPosts = sortPostsByDate.filter((post) => {
               <div class="col-12 sm:col-6 lg:col-4">
                 {post.data.image && (
                   <a
-                    href={`/${post.id}`}
+                    href={`/blog/${post.id}/`} // 100% FIX: ඕතර් පේජ් එකේ පින්තූර ලින්ක් එකට නිවැරදිව /blog/ කෑල්ල සහ අගට ස්ලෑෂ් එක එකතු කළා
                     class="rounded-lg block hover:text-primary overflow-hidden group"
                   >
                     <Image
@@ -92,7 +92,7 @@ const currentPosts = sortPostsByDate.filter((post) => {
                 </ul>
                 <h3 class="h5">
                   <a
-                    href={`/${post.id}`}
+                    href={`/blog/${post.id}/`} // 100% FIX: පෝස්ට් මාතෘකාවේ (Title) ලින්ක් එකටත් නිවැරදිව /blog/ සහ අගට ස්ලෑෂ් එක දැම්මා
                     class="block hover:text-primary transition duration-300"
                   >
                     {post.data.title}

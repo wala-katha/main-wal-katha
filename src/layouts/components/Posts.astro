@@ -16,104 +16,108 @@ const authors = await getSinglePage("authors");
 const { className, posts, fluid } = Astro.props;
 ---
 
-{/* 100% FIX: row-cols-3 දමා Mobile, Tablet, Desktop හැම තිරයකදීම අනිවාර්යයෙන්ම එක හරහට 3 බැගින් පෙන්වීමට සැලැස්වීම */}
+{/* GRID CONTAINER: තිර තුනේදිම පෝස්ට් 3 බැගින් පෙන්වීම */}
 <div
   class={`row row-cols-3 gy-4 gx-2 sm:gx-4 ${className} ${posts.length == 1 ? "justify-center" : ""} `}
 >
   {
     posts.map((post, i: number) => (
-      // 100% FIX: col-12 ඉවත් කර Mobile එකේ සිටම තිරයෙන් 1/3 ක් ගන්නා පරිදි col-4 ලෙස ස්ථාවර කළා
-      <div class="col-4 flex flex-col justify-between">
-        {post.data.image && (
-          <a
-            href={`/blog/${post.id}/`}
-            class="rounded block hover:text-primary overflow-hidden group relative w-full"
-          >
-            {/* 100% FIX: aspect-ratio හෝ object-cover මඟින් පින්තූරය කපන්නේ (Crop) නැතිව, මුල් පින්තූරය සම්පූර්ණයෙන්ම පෙනීමට h-auto සහ object-contain එකතු කළා */}
-            <Image
-              class="group-hover:scale-[1.03] transition duration-300 w-full h-auto object-contain"
-              src={post.data.image}
-              alt={post.data.title}
-              width={445}
-              height={665}
-              loading={i < 3 ? "eager" : "lazy"}
-              decoding="async"
-            />
-          </a>
-        )}
-        
-        {/* INFO ROW: කුඩා තිර වලදී අකුරු කැපී නොයන ලෙස text-[10px] සිට sm:text-xs දක්වා ඔටෝ හැඩගැසෙන පරිදි සකස් කළා */}
-        <ul class="mt-2 mb-1 flex flex-wrap items-center text-text text-[10px] sm:text-xs justify-between gap-1">
-          <li class="flex items-center flex-wrap min-w-0">
-            <BiCategoryAlt className="mr-0.5 h-[12px] w-[12px] sm:h-[14px] sm:w-[14px] text-gray-600 flex-shrink-0" />
-            <ul class="truncate">
-              {post.data.categories.slice(0, 1).map((category) => (
-                <li class="inline-block truncate">
-                  <a
-                    href={`/categories/${slugify(category)}/`}
-                    class="hover:text-primary font-bold bg-gray-100 dark:bg-darkmode-theme-light px-1 sm:px-2 py-0.5 rounded truncate block text-[9px] sm:text-xs"
-                  >
-                    {humanize(category)}
-                  </a>
-                </li>
+      <div class="col-4 flex flex-col">
+        {/* NEUMORPHIC CARD: මුළු පෝස්ට් කොටසම Soft UI බොක්ස් එකක් ලෙස මතු කර දැක්වීම (හරස් ඉර සම්පූර්ණයෙන්ම ඉවත් කර ඇත) */}
+        <div class="h-full flex flex-col justify-between p-2 sm:p-4 rounded-2xl bg-[#fffdfc] dark:bg-darkmode-body shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6),_5px_5px_15px_rgba(0,0,0,0.08),_-5px_-5px_15px_rgba(255,255,255,0.9)] dark:shadow-[5px_5px_15px_rgba(0,0,0,0.4),_-5px_-5px_15px_rgba(255,255,255,0.05)] hover:shadow-[inset_2px_2px_5px_rgba(0,0,0,0.05),_2px_2px_8px_rgba(0,0,0,0.05)] transition-all duration-300">
+          
+          {/* IMAGE CONTAINER: පින්තූරය ඇතුළට ගිලී ඇති (Inverted Neumorphism) පෙනුම ලබා දීම */}
+          {post.data.image && (
+            <a
+              href={`/blog/${post.id}/`}
+              class="rounded-xl block hover:text-primary overflow-hidden group relative w-full p-1 bg-[#fffdfc] dark:bg-darkmode-body shadow-[inset_3px_3px_6px_rgba(0,0,0,0.1),_inset_-3px_-3px_6px_rgba(255,255,255,0.8)] dark:shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.05)]"
+            >
+              <Image
+                class="group-hover:scale-[1.02] transition duration-300 w-full h-auto object-contain rounded-lg"
+                src={post.data.image}
+                alt={post.data.title}
+                width={445}
+                height={665}
+                loading={i < 3 ? "eager" : "lazy"}
+                decoding="async"
+              />
+            </a>
+          )}
+          
+          {/* INFO ROW */}
+          <ul class="mt-3 mb-1.5 flex flex-wrap items-center text-text text-[10px] sm:text-xs justify-between gap-1">
+            <li class="flex items-center flex-wrap min-w-0">
+              <BiCategoryAlt className="mr-0.5 h-[12px] w-[12px] sm:h-[14px] sm:w-[14px] text-gray-600 flex-shrink-0" />
+              <ul class="truncate">
+                {post.data.categories.slice(0, 1).map((category) => (
+                  <li class="inline-block truncate">
+                    <a
+                      href={`/categories/${slugify(category)}/`}
+                      class="hover:text-primary font-bold bg-[#fffdfc] dark:bg-darkmode-theme-light px-2 py-0.5 rounded-md truncate block text-[9px] sm:text-xs shadow-[2px_2px_5px_rgba(0,0,0,0.05),_-2px_-2px_5px_rgba(255,255,255,0.8)]"
+                    >
+                      {humanize(category)}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </li>
+            <li class="flex items-center flex-wrap font-medium text-gray-500 flex-shrink-0">
+              <BiCalendarEdit className="mr-0.5 h-3 w-3 sm:h-4 sm:w-4" />
+              {dateFormat(post.data.date!)}
+            </li>
+          </ul>
+
+          {/* POST TITLE: දැන් මාතෘකාව (Title) පැහැදිලිව පේන ලෙස 100% නිවැරදි කර ඇත */}
+          <h3 class="mb-1.5 line-clamp-2 leading-tight">
+            <a
+              href={`/blog/${post.id}/`}
+              class="block hover:text-primary transition duration-300 text-xs sm:text-sm md:text-base font-bold text-gray-900 dark:text-white"
+            >
+              {post.data.title}
+            </a>
+          </h3>
+
+          {/* POST SNIPPET: පේළි දෙකකට සීමා කළ විස්තරය */}
+          <p class="text-text text-[11px] sm:text-sm line-clamp-2 mb-3 leading-snug">
+            {plainify(post.body ?? "")}
+          </p>
+
+          {/* FOOTER CONTAINER: පෝස්ට් වෙන් කරන පරණ border-t (හරස් ඉර) සම්පූර්ණයෙන්ම ඉවත් කර ඇත */}
+          <div class="flex items-center justify-between pt-1 mt-auto gap-1">
+            {authors
+              .filter((author) =>
+                post.data.authors
+                  .map((author) => slugify(author))
+                  .includes(slugify(author.data.title))
+              )
+              .slice(0, 1)
+              .map((author) => (
+                <a
+                  href={`/authors/${slugify(author.data.title)}/`}
+                  class="flex items-center hover:text-primary text-[10px] sm:text-xs font-medium min-w-0"
+                >
+                  {author.data.image && (
+                    <Image
+                      src={author.data.image}
+                      alt={author.data.title}
+                      height={20}
+                      width={20}
+                      class="mr-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full object-cover flex-shrink-0 shadow-[2px_2px_4px_rgba(0,0,0,0.1)]"
+                    />
+                  )}
+                  <span class="truncate">{author.data.title}</span>
+                </a>
               ))}
-            </ul>
-          </li>
-          <li class="flex items-center flex-wrap font-medium text-gray-500 flex-shrink-0">
-            <BiCalendarEdit className="mr-0.5 h-3 w-3 sm:h-4 sm:w-4" />
-            {dateFormat(post.data.date!)}
-          </li>
-        </ul>
+              
+            {/* READ MORE BUTTON: Neumorphic Soft UI ස්ටයිල් එකට ගැළපෙන පරිදි මතු වී පෙනෙන බටන් එකක් */}
+            <a 
+              href={`/blog/${post.id}/`} 
+              class="text-[9px] sm:text-xs bg-primary text-white font-medium px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex-shrink-0 shadow-[3px_3px_6px_rgba(0,0,0,0.15),_-3px_-3px_6px_rgba(255,255,255,0.5)]"
+            >
+              Read more
+            </a>
+          </div>
 
-        {/* POST TITLE: මොබයිල් තිර වලදී අකුරු ඔටෝ කුඩා වීමට text-xs (Mobile) -> sm:text-sm (Tablet) -> md:text-base (Desktop) ලෙස සකස් කළා */}
-        <h3 class="mb-1 line-clamp-2 leading-tight">
-          <a
-            href={`/blog/${post.id}/`}
-            class="block hover:text-primary transition duration-300 text-xs sm:text-sm md:text-base font-bold text-gray-900 dark:text-white"
-          >
-            {post.data.title}
-          </a>
-        </h3>
-
-        {/* POST SNIPPET: කිසිවක් නොසඟවා පළමු පේළි දෙක (line-clamp-2) පමණක් පෙන්වීමට සීමා කළා */}
-        <p class="text-text text-[11px] sm:text-sm line-clamp-2 mb-2 leading-snug">
-          {plainify(post.body ?? "")}
-        </p>
-
-        {/* AUTHOR & READ MORE CONTAINER */}
-        <div class="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-2 mt-auto gap-1">
-          {authors
-            .filter((author) =>
-              post.data.authors
-                .map((author) => slugify(author))
-                .includes(slugify(author.data.title))
-            )
-            .slice(0, 1)
-            .map((author) => (
-              <a
-                href={`/authors/${slugify(author.data.title)}/`}
-                class="flex items-center hover:text-primary text-[10px] sm:text-xs font-medium min-w-0"
-              >
-                {author.data.image && (
-                  <Image
-                    src={author.data.image}
-                    alt={author.data.title}
-                    height={20}
-                    width={20}
-                    class="mr-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full object-cover flex-shrink-0"
-                  />
-                )}
-                <span class="truncate">{author.data.title}</span>
-              </a>
-            ))}
-            
-          {/* READ MORE BUTTON: මොබයිල් තිරයට අනුව ඔටෝ කුඩා වන පරිදි පෑඩිං සහ ටෙක්ස්ට් සකස් කළා */}
-          <a 
-            href={`/blog/${post.id}/`} 
-            class="text-[9px] sm:text-xs bg-primary text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-full hover:bg-opacity-90 transition-all font-medium flex-shrink-0"
-          >
-            Read more
-          </a>
         </div>
       </div>
     ))

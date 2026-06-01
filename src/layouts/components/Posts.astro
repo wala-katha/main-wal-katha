@@ -27,7 +27,7 @@ const { className, posts, fluid } = Astro.props;
           <a
             href={`/blog/${post.id}/`}
             class="rounded-lg block hover:text-primary overflow-hidden group relative"
-            style="aspect-ratio: 2 / 3;" // BOOK COVER LOOK
+            style="aspect-ratio: 3 / 4;" // 100% FIX: පින්තූරය දිග් අතට නොවී හරස් අතට තව දශමයක් පලල් වීමට 3/4 කළා
           >
             <Image
               class="group-hover:scale-[1.04] transition duration-300 w-full h-full object-cover"
@@ -78,7 +78,7 @@ const { className, posts, fluid } = Astro.props;
         <p class="text-text text-[11px] sm:text-sm line-clamp-2 mb-2 leading-snug">{plainify(post.body ?? "")}</p>
 
         {/* AUTHOR & READ MORE CONTAINER */}
-        <div class="flex items-center justify-between border-t border-gray-100 pt-1.5 sm:pt-3 mt-auto">
+        <div class="flex items-center justify-between border-t border-gray-100 pt-1.5 sm:pt-3 mt-auto gap-2">
           {authors
             .filter((author) =>
               post.data.authors
@@ -89,7 +89,7 @@ const { className, posts, fluid } = Astro.props;
             .map((author) => (
               <a
                 href={`/authors/${slugify(author.data.title)}/`}
-                class="flex items-center hover:text-primary text-[10px] sm:text-xs font-medium"
+                class="flex items-center hover:text-primary text-[10px] sm:text-xs font-medium min-w-0 flex-shrink-1"
               >
                 {author.data.image && (
                   <Image
@@ -97,17 +97,18 @@ const { className, posts, fluid } = Astro.props;
                     alt={author.data.title}
                     height={24}
                     width={24}
-                    class="mr-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full object-cover"
+                    class="mr-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full object-cover flex-shrink-0"
                   />
                 )}
                 {/* කර්තෘගේ නම මොබයිල් ඇතුළු හැම තිරයකදීම පෙන්වීමට hidden ක්ලාස් එක ඉවත් කළා */}
-                <span>{author.data.title}</span>
+                <span class="truncate">{author.data.title}</span>
               </a>
             ))}
             
+          {/* 100% FIX: අනවශ්‍ය ඉඩ මකා දමා බටන් එක හරස් අතට හොඳින් පලල් වීමට flex-grow, text-center සහ px වැඩි කළා */}
           <a 
             href={`/blog/${post.id}/`} 
-            class="text-[9px] sm:text-xs bg-primary text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-full hover:bg-opacity-90 transition-all font-medium whitespace-nowrap"
+            class="text-[9px] sm:text-xs bg-primary text-white px-3 sm:px-6 py-1 sm:py-1.5 rounded-full hover:bg-opacity-90 transition-all font-medium whitespace-nowrap flex-grow text-center max-w-[100px]"
           >
             Read
           </a>

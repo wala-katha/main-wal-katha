@@ -1,3 +1,4 @@
+---
 import { getSinglePage } from "@/lib/contentParser.astro";
 import dateFormat from "@/lib/utils/dateFormat";
 import { humanize, plainify, slugify } from "@/lib/utils/textConverter";
@@ -26,21 +27,21 @@ const { className, posts, fluid } = Astro.props;
           <a
             href={`/blog/${post.id}/`}
             class="rounded-lg block hover:text-primary overflow-hidden group relative"
-            style="aspect-ratio: 2 / 3;" // පළල වෙනස් නොකර, දිග පමණක් දශමයකින් වැඩි කිරීමට 2/3 ලෙස සකස් කරන ලදී
+            style="aspect-ratio: 2 / 3;" // SMART FIX: පළල වෙනස් නොකර, උස පමණක් දශමයක් උඩටයි පහලටයි දික් කර පින්තූරය හොඳින් පෙන්වීමට 2/3 ලෙස සකස් කළා
           >
             <Image
               class="group-hover:scale-[1.04] transition duration-300 w-full h-full object-cover"
               src={post.data.image}
               alt={post.data.title}
               width={445}
-              height={665}
+              height={665} // SEO: නව aspect-ratio එකට අනුව උස නිවැරදිව ලබා දුන්නා
               loading={i < 3 ? "eager" : "lazy"}
               decoding="async"
             />
           </a>
         )}
         
-        {/* INFO ROW: මොබයිල් තිරවල ඉඩ ඉතිරි කර ගැනීමට අකුරු සහ අයිකන කුඩා කළා */}
+        {/* INFO ROW: XML ව්‍යුහය හෝ අයිකන කිසිවක් වෙනස් කර නැත */}
         <ul class="mt-2 mb-1 flex flex-wrap items-center text-text text-[10px] sm:text-sm justify-between">
           <li class="flex items-center flex-wrap">
             <BiCategoryAlt className="mr-0.5 h-3 w-3 sm:h-[16px] sm:w-[16px] text-gray-600" />
@@ -63,7 +64,7 @@ const { className, posts, fluid } = Astro.props;
           </li>
         </ul>
 
-        {/* POST TITLE: මොබයිල් තිරයේදී අකුරු ඔටෝම කුඩා වන ලෙස text-xs සහ line-clamp සකස් කළා */}
+        {/* POST TITLE */}
         <h3 class="mb-1 line-clamp-2 leading-tight">
           <a
             href={`/blog/${post.id}/`}
@@ -73,7 +74,7 @@ const { className, posts, fluid } = Astro.props;
           </a>
         </h3>
 
-        {/* POST SNIPPET: කතාවේ පේළි දෙකක් හැම තිරයකදීම පෙන්වීමට hidden ක්ලාස් එක සම්පූර්ණයෙන්ම ඉවත් කළා */}
+        {/* POST SNIPPET */}
         <p class="text-text text-[11px] sm:text-sm line-clamp-2 mb-2 leading-snug">{plainify(post.body ?? "")}</p>
 
         {/* AUTHOR & READ MORE CONTAINER */}
@@ -99,12 +100,10 @@ const { className, posts, fluid } = Astro.props;
                     class="mr-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full object-cover flex-shrink-0"
                   />
                 )}
-                {/* කර්තෘගේ නම මොබයිල් ඇතුළු හැම තිරයකදීම පෙන්වීමට hidden ක්ලාස් එක ඉවත් කළා */}
                 <span class="truncate">{author.data.title}</span>
               </a>
             ))}
             
-          {/* 100% FIX: අනවශ්‍ය ඉඩ මකා දමා බටන් එක හරස් අතට හොඳින් පලල් වීමට flex-grow, text-center සහ px වැඩි කළා */}
           <a 
             href={`/blog/${post.id}/`} 
             class="text-[9px] sm:text-xs bg-primary text-white px-3 sm:px-6 py-1 sm:py-1.5 rounded-full hover:bg-opacity-90 transition-all font-medium whitespace-nowrap flex-grow text-center max-w-[100px]"

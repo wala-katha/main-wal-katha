@@ -2,7 +2,6 @@
 import { humanize } from "@/lib/utils/textConverter";
 import { Image } from "astro:assets";
 
-// ඩෙමෝ දත්ත: පසුව ඔයාට අවශ්‍ය පරිදි මේ ලින්ක්ස් වෙනස් කරගත හැක
 const demoSlides = [
   {
     id: "mali-wal-katha",
@@ -13,7 +12,7 @@ const demoSlides = [
   {
     id: "sinhala-lip-katha",
     title: "තුස්ලිම් මිනිසා - සිංහල ලිප් කතා",
-    image: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjqGKoIkxKvTb-z2d5JqA5-6h_Tp_s9B1iDwcrXfhlpYUUMtjWKuEvtcp0fEaDK4fx6hMK-9e9cUwGT7QdsEFFsdr6M-pi8nGfD0lbLK72Pwte3vhidlUjIkyfNrKKfBT3hMpynFT5nuwaEePOGUiZv6DBhOI4onVzsIzjyqVTB4yMx7mGV0BkjMHr0uBY/s645/1000021219.jpg",
+    image: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjqGKoIkxKvTb-z2d5JqA5-6h_Tp_s9B1iDwcrXfhlpYUUMtjWKuEvtcp0fEaDK4fx6hMpi8nGfD0lbLK72Pwte3vhidlUjIkyfNrKKfBT3hMpynFT5nuwaEePOGUiZv6DBhOI4onVzsIzjyqVTB4yMx7mGV0BkjMHr0uBY/s645/1000021219.jpg",
     category: "Wela Katha"
   },
   {
@@ -31,17 +30,42 @@ const demoSlides = [
 ];
 ---
 
-<div class="relative w-full overflow-hidden rounded-xl bg-gray-950 mb-8 shadow-lg select-none" id="astro-featured-slider">
-  
-  {/* SLIDER IMAGES CONTAINER */}
-  <div class="relative w-full aspect-[16/7] sm:aspect-[21/7] md:aspect-[24/7] bg-gray-900 overflow-hidden" id="slider-view-box">
+<!--
+  SEO: Featured image slider for Sinhala Wal Katha stories.
+  Structured markup + aria labels for accessibility & crawlability.
+-->
+<section
+  aria-label="Featured Sinhala Wal Katha Stories Slider"
+  class="relative w-full overflow-hidden rounded-xl bg-gray-950 mb-8 shadow-lg select-none"
+  id="astro-featured-slider"
+>
+  <!-- Visually hidden h2 for SEO -->
+  <h2 class="sr-only">නවතම සිංහල වල් කතා - Featured Sinhala Wal Katha</h2>
+
+  <!--
+    SLIDER VIEW BOX
+    · Next slide sits at z-0 (visible behind canvas)
+    · Current slide sits at z-10 (top)
+    · Canvas sits at z-20 (draws particles that erase current slide pixels)
+    · No black gap ever: next slide is always fully visible underneath
+  -->
+  <div
+    class="relative w-full aspect-[16/7] sm:aspect-[21/7] md:aspect-[24/7] overflow-hidden bg-gray-900"
+    id="slider-view-box"
+  >
     {demoSlides.map((slide, index) => (
-      <div 
+      <div
         class="absolute inset-0 w-full h-full slide-item"
-        style={`opacity: ${index === 0 ? '1' : '0'}; z-index: ${index === 0 ? '20' : '10'}; transition: opacity 1200ms ease-in-out, filter 1200ms ease-in-out;`}
+        style={`z-index: ${index === 0 ? '10' : '0'};`}
         data-slide-index={index}
+        aria-hidden={index !== 0 ? "true" : "false"}
       >
-        <a href={`/blog/${slide.id}/`} class="block w-full h-full group" title={slide.title}>
+        <a
+          href={`/blog/${slide.id}/`}
+          class="block w-full h-full group"
+          title={slide.title}
+          aria-label={`${slide.category}: ${slide.title}`}
+        >
           <Image
             src={slide.image}
             alt={slide.title}
@@ -49,13 +73,13 @@ const demoSlides = [
             height={525}
             quality="max"
             loading={index === 0 ? "eager" : "lazy"}
+            fetchpriority={index === 0 ? "high" : "auto"}
             decoding="async"
-            /* MAXIMUM CLARITY: පින්තූරය උපරිම පැහැදිලිව, මුල් පිටපතේ කොලිටියෙන්ම පෙන්වීම */
-            class="w-full h-full object-cover object-center transition duration-700 group-hover:scale-[1.01]"
+            class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.01]"
           />
-          
-          {/* CATEGORY TAG OVERLAY */}
-          <div class="absolute bottom-3 left-4 z-30">
+
+          <!-- Category badge -->
+          <div class="absolute bottom-3 left-4 z-20" aria-hidden="true">
             <span class="bg-primary text-white px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded uppercase tracking-wider shadow-md pointer-events-none">
               {humanize(slide.category)}
             </span>
@@ -64,195 +88,231 @@ const demoSlides = [
       </div>
     ))}
 
-    {/* 🧩 FINE PARTICLES CANVAS: පින්තූරය බොඳ කරගෙන යට සිට උඩට මකාගෙන යන ලේයරය */}
-    <canvas id="particle-transition-canvas" class="absolute inset-0 pointer-events-none z-40 hidden w-full h-full"></canvas>
+    <!--
+      PARTICLE CANVAS
+      · z-20: sits above both slides
+      · Draws dark pixel-blocks bottom→top that "erase" the current slide,
+        revealing the next slide beneath — zero black gap
+    -->
+    <canvas
+      id="particle-transition-canvas"
+      class="absolute inset-0 pointer-events-none z-20 hidden w-full h-full"
+      aria-hidden="true"
+    ></canvas>
   </div>
 
-  {/* NAVIGATION DOTS */}
-  <div class="absolute bottom-3 right-4 flex gap-1.5 z-50">
-    {demoSlides.map((_, index) => (
+  <!-- Navigation dots -->
+  <nav aria-label="Slider navigation" class="absolute bottom-3 right-4 flex gap-1.5 z-30">
+    {demoSlides.map((slide, index) => (
       <button
         class={`w-2 h-2 rounded-full transition-all duration-300 slider-dot ${index === 0 ? 'bg-primary scale-125' : 'bg-white/50'}`}
         data-index={index}
-        aria-label={`Go to slide ${index + 1}`}
+        aria-label={`${index + 1} වන ස්ලයිඩයට යන්න: ${slide.title}`}
+        aria-current={index === 0 ? "true" : "false"}
       ></button>
     ))}
-  </div>
-</div>
+  </nav>
+</section>
 
-{/* SMOOTH PARTICLES & BLUR TRANSITION SCRIPT */}
 <script>
   function initFineParticleSlider() {
-    const slider = document.getElementById('astro-featured-slider');
-    const slides = document.querySelectorAll('.slide-item') as NodeListOf<HTMLElement>;
-    const dots = document.querySelectorAll('.slider-dot');
-    const canvas = document.getElementById('particle-transition-canvas') as HTMLCanvasElement;
-    
-    if (!slider || slides.length === 0 || dots.length === 0 || !canvas) return;
-    
+    const slider   = document.getElementById('astro-featured-slider');
+    const slides   = document.querySelectorAll('.slide-item') as NodeListOf<HTMLElement>;
+    const dots     = document.querySelectorAll('.slider-dot')  as NodeListOf<HTMLElement>;
+    const canvas   = document.getElementById('particle-transition-canvas') as HTMLCanvasElement;
+
+    if (!slider || !slides.length || !dots.length || !canvas) return;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let currentIndex = 0;
+    let currentIndex  = 0;
     const totalSlides = slides.length;
-    const intervalTime = 5000; // තත්පර 5න් 5ට මාරු වීම
-    let slideInterval: any;
-    let isAnimating = false;
+    const INTERVAL    = 5000;   // auto-advance ms
+    const DURATION    = 1400;   // particle animation ms
+    let timer: ReturnType<typeof setInterval>;
+    let isAnimating   = false;
 
+    /* ─── canvas resize ─────────────────────────────────────────── */
     function resizeCanvas() {
-      canvas.width = canvas.offsetWidth;
+      canvas.width  = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
     }
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // යට සිට උඩට ගමන් කරන සියුම් කැට ව්‍යුහය (Particles)
+    /* ─── Particle class ─────────────────────────────────────────── */
+    /*
+      Each particle is a small square pixel-block that:
+        1. spawns at the BOTTOM of the canvas
+        2. travels UPWARD
+        3. covers (erases) the current slide as it rises
+      Colour matches the next slide's rough mid-tone so there is
+      no jarring colour flash — we simply use a near-black tile.
+    */
     class Particle {
-      x: number;
-      y: number;
-      size: number;
-      speedY: number;
+      x: number; y: number;
+      w: number; h: number;
+      vy: number;
       alpha: number;
-      fadeSpeed: number;
 
-      constructor(startX: number, startY: number) {
-        this.x = startX;
-        this.y = startY;
-        // කුඩා සියුම් කැට සයිස් එක
-        this.size = Math.random() * 3 + 1;
-        // යට සිට උඩට කෙලින්ම ගමන් කරන වේගය
-        this.speedY = -(Math.random() * 4 + 2);
-        this.alpha = 1;
-        this.fadeSpeed = Math.random() * 0.02 + 0.01;
+      constructor() {
+        this.w     = Math.random() * 14 + 6;          // 6–20 px wide
+        this.h     = Math.random() * 14 + 6;          // 6–20 px tall
+        this.x     = Math.random() * (canvas.width + 40) - 20;
+        this.y     = canvas.height + this.h;          // start below canvas
+        this.vy    = -(Math.random() * 3.5 + 2.5);   // upward speed
+        this.alpha = Math.random() * 0.3 + 0.7;      // 0.7–1.0
       }
 
-      update() {
-        this.y += this.speedY;
-        this.alpha -= this.fadeSpeed;
+      update() { this.y += this.vy; }
+
+      draw(c: CanvasRenderingContext2D) {
+        c.save();
+        c.globalAlpha = this.alpha;
+        c.fillStyle   = '#090d16';
+        c.fillRect(this.x, this.y, this.w, this.h);
+        c.restore();
       }
 
-      draw(context: CanvasRenderingContext2D) {
-        context.save();
-        context.globalAlpha = Math.max(0, this.alpha);
-        context.fillStyle = 'rgba(255, 255, 255, 0.75)'; // පින්තූරය මකන ස්ක්‍රැච් ලුක් එක දෙන කැට
-        context.beginPath();
-        context.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        context.fill();
-        context.restore();
-      }
+      get done() { return this.y + this.h < 0; }
     }
 
-    let particles: Particle[] = [];
+    /* ─── Main transition ────────────────────────────────────────── */
+    function transitionTo(nextIdx: number) {
+      if (isAnimating || nextIdx === currentIndex) return;
+      isAnimating = true;
 
-    function runParticleDissolve(callback: () => void) {
+      const cur  = slides[currentIndex];
+      const next = slides[nextIdx];
+
+      /*
+        Layer order during animation:
+          next  z-0  (always fully visible underneath — no black gap)
+          cur   z-10 (top; particles will cover it)
+          canvas z-20 (draws particles on top of cur)
+
+        As particles sweep bottom→top they visually "erase" cur,
+        and what shows through is next underneath.
+      */
+      next.style.zIndex = '0';   // place next behind current
+      cur.style.zIndex  = '10';
+
       canvas.classList.remove('hidden');
-      particles = [];
-      let animationFrameId: number;
-      const startTime = Date.now();
-      const duration = 1200;
 
-      function loop() {
-        const elapsed = Date.now() - startTime;
-        ctx!.clearRect(0, 0, canvas.width, canvas.height);
+      const particles: Particle[] = [];
+      const spawnEnd  = DURATION * 0.65;  // stop spawning at 65 % of duration
+      let   start: number | null = null;
+      let   rafId: number;
+      let   dotsSwitched = false;
 
-        // යට සිට උඩට ක්‍රමයෙන් කැට මතු වෙමින් පින්තූරය වසා ගැනීම
-        if (elapsed < duration * 0.7) {
-          // හැම ෆ්‍රේම් එකකදීම යටම සීමාවෙන් අලුත් කැට ජනනය කිරීම
-          for (let i = 0; i < 35; i++) {
-            const startX = Math.random() * canvas.width;
-            const startY = canvas.height - (elapsed / duration) * canvas.height * 0.5;
-            if (startY > 0) {
-              particles.push(new Particle(startX, startY));
-            }
+      /*
+        We also draw a growing black rectangle from BOTTOM that tracks
+        the wave front, ensuring no un-covered pixels behind slow particles.
+      */
+      function frame(ts: number) {
+        if (!start) start = ts;
+        const elapsed = ts - start;
+        const progress = Math.min(elapsed / DURATION, 1); // 0→1
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        /* ── 1. Solid fill: bottom portion already swept by wave ── */
+        const waveFront = canvas.height * (1 - progress); // moves top-ward
+        if (waveFront < canvas.height) {
+          ctx.save();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle   = '#090d16';
+          ctx.fillRect(0, waveFront, canvas.width, canvas.height - waveFront);
+          ctx.restore();
+        }
+
+        /* ── 2. Spawn new particles in wave-front band ── */
+        if (elapsed < spawnEnd) {
+          // how far up the wave has reached (0 = bottom, 1 = top)
+          const waveY = canvas.height * (1 - (elapsed / spawnEnd));
+          const band  = canvas.height * 0.25; // scatter band height
+          for (let i = 0; i < 18; i++) {
+            const p = new Particle();
+            p.y = waveY + Math.random() * band;   // scatter in band
+            p.x = Math.random() * canvas.width;
+            particles.push(p);
           }
         }
 
-        particles.forEach((particle, index) => {
-          particle.update();
-          particle.draw(ctx!);
-          if (particle.alpha <= 0 || particle.y < 0) {
-            particles.splice(index, 1);
-          }
-        });
+        /* ── 3. Update & draw flying particles ── */
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.update();
+          p.draw(ctx);
+          if (p.done) particles.splice(i, 1);
+        }
 
-        if (elapsed < duration || particles.length > 0) {
-          animationFrameId = requestAnimationFrame(loop);
+        /* ── 4. Swap slides exactly when wave covers ~50 % ── */
+        if (progress >= 0.5 && !dotsSwitched) {
+          dotsSwitched = true;
+          updateDots(nextIdx);
+          // Bring next slide to top; current goes behind canvas
+          next.style.zIndex = '10';
+          cur.style.zIndex  = '0';
+          currentIndex = nextIdx;
+        }
+
+        if (progress < 1 || particles.length > 0) {
+          rafId = requestAnimationFrame(frame);
         } else {
+          /* ── 5. Clean up ── */
           canvas.classList.add('hidden');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          cur.style.zIndex = '0';
           isAnimating = false;
         }
       }
 
-      // සංක්‍රාන්ති මැදදී පින්තූර ස්විච් එක සිදුවීම
-      setTimeout(callback, 300);
-      loop();
+      rafId = requestAnimationFrame(frame);
     }
 
-    function transitionToSlide(nextIndex: number) {
-      if (isAnimating || nextIndex === currentIndex) return;
-      isAnimating = true;
-
-      const currentSlide = slides[currentIndex];
-      const nextSlide = slides[nextIndex];
-
-      // 1. පරණ පින්තූරය තදින් බොඳ වී (Blur) මැකී යාම
-      currentSlide.style.filter = 'blur(20px)';
-      currentSlide.style.opacity = '0';
-      currentSlide.style.zIndex = '10'; // යට ස්ථරයට දැමීම (කළු පසුබිම නොපෙනී තිබීමට)
-
-      // 2. අලුත් පින්තූරය ඒ සමඟම යටින් මතුවී ඉහළ Z-Index එකට පැමිණීම
-      nextSlide.style.filter = 'blur(0px)';
-      nextSlide.style.opacity = '1';
-      nextSlide.style.zIndex = '20';
-
-      // 3. කැට මතු වී ඉහළට යන ඉෆෙක්ට් එක රන් කිරීම
-      runParticleDissolve(() => {
-        dots.forEach((dot, i) => {
-          if (i === nextIndex) {
-            dot.classList.add('bg-primary', 'scale-125');
-            dot.classList.remove('bg-white/50');
-          } else {
-            dot.classList.remove('bg-primary', 'scale-125');
-            dot.classList.add('bg-white/50');
-          }
-        });
-
-        setTimeout(() => {
-          currentSlide.style.filter = 'blur(0px)';
-          currentSlide.style.zIndex = '10';
-        }, 1200);
-
-        currentIndex = nextIndex;
+    /* ─── Dots update ────────────────────────────────────────────── */
+    function updateDots(activeIdx: number) {
+      dots.forEach((dot, i) => {
+        const active = i === activeIdx;
+        dot.classList.toggle('bg-primary',  active);
+        dot.classList.toggle('scale-125',   active);
+        dot.classList.toggle('bg-white/50', !active);
+        dot.setAttribute('aria-current', active ? 'true' : 'false');
+      });
+      slides.forEach((s, i) => {
+        s.setAttribute('aria-hidden', i !== activeIdx ? 'true' : 'false');
       });
     }
 
-    function startInterval() {
-      slideInterval = setInterval(() => {
-        let nextIndex = (currentIndex + 1) % totalSlides;
-        transitionToSlide(nextIndex);
-      }, intervalTime);
+    /* ─── Auto-advance ───────────────────────────────────────────── */
+    function startTimer() {
+      timer = setInterval(() => {
+        transitionTo((currentIndex + 1) % totalSlides);
+      }, INTERVAL);
     }
+    function stopTimer() { clearInterval(timer); }
 
-    function stopInterval() {
-      clearInterval(slideInterval);
-    }
-
-    dots.forEach((dot) => {
-      dot.addEventListener('click', (e) => {
+    /* ─── Dot clicks ─────────────────────────────────────────────── */
+    dots.forEach(dot => {
+      dot.addEventListener('click', () => {
         if (isAnimating) return;
-        stopInterval();
-        const index = parseInt((e.target as HTMLElement).getAttribute('data-index') || '0');
-        transitionToSlide(index);
-        startInterval();
+        stopTimer();
+        const idx = parseInt(dot.getAttribute('data-index') || '0', 10);
+        transitionTo(idx);
+        startTimer();
       });
     });
 
-    slider.addEventListener('mouseenter', stopInterval);
-    slider.addEventListener('mouseleave', startInterval);
+    /* ─── Pause on hover ─────────────────────────────────────────── */
+    slider.addEventListener('mouseenter', stopTimer);
+    slider.addEventListener('mouseleave', startTimer);
 
-    startInterval();
+    startTimer();
   }
 
+  /* Astro View Transitions support */
   document.addEventListener('astro:page-load', initFineParticleSlider);
   initFineParticleSlider();
 </script>

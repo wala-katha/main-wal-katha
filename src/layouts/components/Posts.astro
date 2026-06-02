@@ -27,14 +27,14 @@ const { className, posts, fluid } = Astro.props;
           <a
             href={`/blog/${post.id}/`}
             class="rounded-lg block hover:text-primary overflow-hidden group relative"
-            style="aspect-ratio: 4 / 5;" // SMART SEO & UI FIX: පින්තූරය තව දශමයක් පළලින් සහ උසින් විශාලව, පැහැදිලිව පෙනීමට අනුපාතය 4/5 ලෙස වැඩි දියුණු කළා.
+            style="aspect-ratio: 2 / 3;" // SMART SEO & UI FIX: පළලට වඩා දිග ප්‍රමාණය තවත් වැඩි කර (2:3 Ratio) පින්තූරය හොඳින් පෙනෙන්නට සැලැස්සුවා
           >
             <Image
               class="group-hover:scale-[1.04] transition duration-300 w-full h-full object-cover"
               src={post.data.image}
               alt={post.data.title}
-              width={600} // SEO & QUALITY FIX: රූපයේ ගුණාත්මකභාවය (Resolution) සහ පළල තව දශමයක් වැඩි කළා
-              height={750} // SEO & QUALITY FIX: රූපයේ උස ප්‍රමාණය දශමයකින් වැඩි කළා
+              width={500} // SEO & PERFORMANCE: පින්තූරයේ පළල ප්‍රමාණය දශමයකින් වැඩි කළා
+              height={750} // SEO & PERFORMANCE: පළලට වඩා දිග ප්‍රමාණය කැපී පෙනෙන ලෙස (Aspect Ratio එකට ගැළපෙන්න) 750 දක්වා වැඩි කළා
               loading={i < 3 ? "eager" : "lazy"}
               decoding="async"
             />

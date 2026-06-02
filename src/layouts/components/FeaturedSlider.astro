@@ -34,11 +34,11 @@ const demoSlides = [
 <div class="relative w-full overflow-hidden rounded-xl bg-gray-950 mb-8 shadow-lg select-none" id="astro-featured-slider">
   
   {/* SLIDER IMAGES CONTAINER */}
-  <div class="relative w-full aspect-[16/7] sm:aspect-[21/7] md:aspect-[24/7] bg-gray-950 overflow-hidden" id="slider-view-box">
+  <div class="relative w-full aspect-[16/7] sm:aspect-[21/7] md:aspect-[24/7] bg-gray-900 overflow-hidden" id="slider-view-box">
     {demoSlides.map((slide, index) => (
       <div 
         class="absolute inset-0 w-full h-full slide-item"
-        style={`opacity: ${index === 0 ? '1' : '0'}; z-index: ${index === 0 ? '20' : '10'}; filter: blur(0px); transition: opacity 1200ms ease-in-out, filter 1200ms ease-in-out;`}
+        style={`opacity: ${index === 0 ? '1' : '0'}; z-index: ${index === 0 ? '20' : '10'}; transition: opacity 1200ms ease-in-out, filter 1200ms ease-in-out;`}
         data-slide-index={index}
       >
         <a href={`/blog/${slide.id}/`} class="block w-full h-full group" title={slide.title}>
@@ -50,11 +50,11 @@ const demoSlides = [
             quality="max"
             loading={index === 0 ? "eager" : "lazy"}
             decoding="async"
-            /* MAXIMUM CLARITY FIX: කිසිදු අඳුරු Overlay එකක් නොමැත, පින්තූරය උපරිම පිරිසිදුවට පෙනේ */
+            /* MAXIMUM CLARITY: පින්තූරය උපරිම පැහැදිලිව, මුල් පිටපතේ කොලිටියෙන්ම පෙන්වීම */
             class="w-full h-full object-cover object-center transition duration-700 group-hover:scale-[1.01]"
           />
           
-          {/* ONLY CATEGORY TAG OVERLAY */}
+          {/* CATEGORY TAG OVERLAY */}
           <div class="absolute bottom-3 left-4 z-30">
             <span class="bg-primary text-white px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded uppercase tracking-wider shadow-md pointer-events-none">
               {humanize(slide.category)}
@@ -64,12 +64,12 @@ const demoSlides = [
       </div>
     ))}
 
-    {/* 🧩 FINE PARTICLES CANVAS LAYER (Z-Index එක 25 කර පින්තූර අතර මැදින් කැට මතුවීමට සැලැස්වීම) */}
-    <canvas id="particle-transition-canvas" class="absolute inset-0 pointer-events-none z-25 hidden w-full h-full"></canvas>
+    {/* 🧩 FINE PARTICLES CANVAS: පින්තූරය බොඳ කරගෙන යට සිට උඩට මකාගෙන යන ලේයරය */}
+    <canvas id="particle-transition-canvas" class="absolute inset-0 pointer-events-none z-40 hidden w-full h-full"></canvas>
   </div>
 
   {/* NAVIGATION DOTS */}
-  <div class="absolute bottom-3 right-4 flex gap-1.5 z-40">
+  <div class="absolute bottom-3 right-4 flex gap-1.5 z-50">
     {demoSlides.map((_, index) => (
       <button
         class={`w-2 h-2 rounded-full transition-all duration-300 slider-dot ${index === 0 ? 'bg-primary scale-125' : 'bg-white/50'}`}
@@ -106,7 +106,7 @@ const demoSlides = [
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // 🌟 GLOWING WHITE PARTICLES LOGIC: යට සිට උඩට යන ලස්සන අර්ධ-පාරදෘශ්‍ය කැට
+    // යට සිට උඩට ගමන් කරන සියුම් කැට ව්‍යුහය (Particles)
     class Particle {
       x: number;
       y: number;
@@ -118,10 +118,12 @@ const demoSlides = [
       constructor(startX: number, startY: number) {
         this.x = startX;
         this.y = startY;
-        this.size = Math.random() * 2 + 1; // පොඩි සියුම් කැට (1px - 3px)
-        this.speedY = -(Math.random() * 2.5 + 1.5); // ඉහළට යන වේගය
-        this.alpha = Math.random() * 0.5 + 0.5;
-        this.fadeSpeed = Math.random() * 0.01 + 0.005;
+        // කුඩා සියුම් කැට සයිස් එක
+        this.size = Math.random() * 3 + 1;
+        // යට සිට උඩට කෙලින්ම ගමන් කරන වේගය
+        this.speedY = -(Math.random() * 4 + 2);
+        this.alpha = 1;
+        this.fadeSpeed = Math.random() * 0.02 + 0.01;
       }
 
       update() {
@@ -132,10 +134,7 @@ const demoSlides = [
       draw(context: CanvasRenderingContext2D) {
         context.save();
         context.globalAlpha = Math.max(0, this.alpha);
-        // පින්තූර උපරිම පැහැදිලි නිසා කැට ලස්සනට කැපී පෙනෙන්න සුදු/රන්වන් මිශ්‍ර ග්ලෝ එකක් දුන්නා
-        context.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        context.shadowBlur = 4;
-        context.shadowColor = '#fff';
+        context.fillStyle = 'rgba(255, 255, 255, 0.75)'; // පින්තූරය මකන ස්ක්‍රැච් ලුක් එක දෙන කැට
         context.beginPath();
         context.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         context.fill();
@@ -145,22 +144,26 @@ const demoSlides = [
 
     let particles: Particle[] = [];
 
-    function animateParticles(callback: () => void) {
+    function runParticleDissolve(callback: () => void) {
       canvas.classList.remove('hidden');
       particles = [];
-      let startTime = Date.now();
-      const duration = 1200; // සම්පූර්ණ ට්‍රාන්සිෂන් කාලය මිලි තත්පර 1200
-      let callbackTriggered = false;
+      let animationFrameId: number;
+      const startTime = Date.now();
+      const duration = 1200;
 
       function loop() {
         const elapsed = Date.now() - startTime;
         ctx!.clearRect(0, 0, canvas.width, canvas.height);
 
-        // මුළු ස්ලයිඩරයේම යට පැත්තෙන් කැට ක්‍රමයෙන් ඉහළට විසි වීම
+        // යට සිට උඩට ක්‍රමයෙන් කැට මතු වෙමින් පින්තූරය වසා ගැනීම
         if (elapsed < duration * 0.7) {
-          for (let i = 0; i < 8; i++) {
+          // හැම ෆ්‍රේම් එකකදීම යටම සීමාවෙන් අලුත් කැට ජනනය කිරීම
+          for (let i = 0; i < 35; i++) {
             const startX = Math.random() * canvas.width;
-            particles.push(new Particle(startX, canvas.height + 5));
+            const startY = canvas.height - (elapsed / duration) * canvas.height * 0.5;
+            if (startY > 0) {
+              particles.push(new Particle(startX, startY));
+            }
           }
         }
 
@@ -172,20 +175,16 @@ const demoSlides = [
           }
         });
 
-        // 🔄 NO BLACK SCREEN FIX: ඇනිමේෂන් එක මැදදී (මිලි තත්පර 500 දී) අලුත් පින්තූරය ස්මූත් ලෙස මාරු කිරීම
-        if (elapsed >= 500 && !callbackTriggered) {
-          callbackTriggered = true;
-          callback();
-        }
-
         if (elapsed < duration || particles.length > 0) {
-          requestAnimationFrame(loop);
+          animationFrameId = requestAnimationFrame(loop);
         } else {
           canvas.classList.add('hidden');
           isAnimating = false;
         }
       }
 
+      // සංක්‍රාන්ති මැදදී පින්තූර ස්විච් එක සිදුවීම
+      setTimeout(callback, 300);
       loop();
     }
 
@@ -196,21 +195,18 @@ const demoSlides = [
       const currentSlide = slides[currentIndex];
       const nextSlide = slides[nextIndex];
 
-      // 1. ඊළඟ පින්තූරය පරණ එකට යටින් සූදානම් කර තැබීම (කළු පසුබිම පෙනීම වැළැක්වීමට)
-      nextSlide.style.zIndex = '15';
-      nextSlide.style.opacity = '1';
+      // 1. පරණ පින්තූරය තදින් බොඳ වී (Blur) මැකී යාම
+      currentSlide.style.filter = 'blur(20px)';
+      currentSlide.style.opacity = '0';
+      currentSlide.style.zIndex = '10'; // යට ස්ථරයට දැමීම (කළු පසුබිම නොපෙනී තිබීමට)
+
+      // 2. අලුත් පින්තූරය ඒ සමඟම යටින් මතුවී ඉහළ Z-Index එකට පැමිණීම
       nextSlide.style.filter = 'blur(0px)';
+      nextSlide.style.opacity = '1';
+      nextSlide.style.zIndex = '20';
 
-      // 2. කැට ඉහළට යන ගමන් පරණ පින්තූරය බ්ලර් වී මැකී යාම ආරම්භ කිරීම
-      animateParticles(() => {
-        currentSlide.style.filter = 'blur(15px)';
-        currentSlide.style.opacity = '0';
-        currentSlide.style.zIndex = '10';
-
-        // 3. අලුත් පින්තූරය ප්‍රධාන ස්ථරය (Main Layer) බවට පත් කිරීම
-        nextSlide.style.zIndex = '20';
-
-        // ඩොට්ස් අප්ඩේට් කිරීම
+      // 3. කැට මතු වී ඉහළට යන ඉෆෙක්ට් එක රන් කිරීම
+      runParticleDissolve(() => {
         dots.forEach((dot, i) => {
           if (i === nextIndex) {
             dot.classList.add('bg-primary', 'scale-125');
@@ -221,11 +217,9 @@ const demoSlides = [
           }
         });
 
-        // ඊළඟ මාරුව සඳහා පරණ පින්තූරයේ ස්ටයිල්ස් නිවැරදිව රීසෙට් කිරීම
         setTimeout(() => {
-          if (currentIndex !== nextIndex) {
-            currentSlide.style.filter = 'blur(0px)';
-          }
+          currentSlide.style.filter = 'blur(0px)';
+          currentSlide.style.zIndex = '10';
         }, 1200);
 
         currentIndex = nextIndex;

@@ -7,7 +7,7 @@ const demoSlides = [
   {
     id: "mali-wal-katha",
     title: "මේල්ලිම් මෙම් - Mali Wal Katha",
-    image: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh2ZpuNRWZgp8bePG3R3eeD_ZXZAeyEciXJ5PCwoYe0-eT_KpR06b8Rh-MapoGN9ib9zJJ9dswr8I5uuqbQzNuxxZFQLBPFhvrrp4ZkPYfiE9N0XWN6Q6xW7n8ET5UxGJmU0_QDkfaJKhIwTBtsPlj12gfGN4xSLNe5e0fQziL8Iq_HO5NolS4JC_jCZdw/s708/1000021201.jpg",
+    image: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh2ZpuNRWZgp8bePG3R3eeD_ZXZAeyEciXJ5PCwoYe0-eT_KpR06b8Rh-MapoGN9ib9zJJ9dswr8I5uuqbQzNuxxZFQLBPFhvrrp4ZkPYfiE9Y0XWN6Q6xW7n8ET5UxGJmU0_QDkfaJKhIwTBtsPlj12gfGN4xSLNe5e0fQziL8Iq_HO5NolS4JC_jCZdw/s708/1000021201.jpg",
     category: "Wal Katha"
   },
   {
@@ -33,28 +33,29 @@ const demoSlides = [
 
 <div class="relative w-full overflow-hidden rounded-xl bg-gray-950 mb-8 shadow-lg select-none" id="astro-featured-slider">
   
-  {/* SLIDER IMAGES CONTAINER: Aspect Ratio එක උඩිනුයි යටිනුයි දශමයක් අඩු කර 16/7 මට්ටමට හැදුවා */}
+  {/* SLIDER IMAGES CONTAINER: Aspect Ratio 16/7 */}
   <div class="relative w-full aspect-[16/7] sm:aspect-[21/7] md:aspect-[24/7] bg-gray-900 overflow-hidden" id="slider-view-box">
     {demoSlides.map((slide, index) => (
       <div 
-        class={`absolute inset-0 w-full h-full slide-item`}
-        style={`opacity: ${index === 0 ? '1' : '0'}; z-index: ${index === 0 ? '10' : '0'}; transition: opacity 1200ms ease-in-out, filter 1200ms ease-in-out;`}
+        class="absolute inset-0 w-full h-full slide-item"
+        style={`opacity: ${index === 0 ? '1' : '0'}; z-index: ${index === 0 ? '20' : '10'}; transition: opacity 1200ms ease-in-out, filter 1200ms ease-in-out;`}
         data-slide-index={index}
       >
         <a href={`/blog/${slide.id}/`} class="block w-full h-full group" title={slide.title}>
+          {/* MAXIMUM CLARITY FIX: unoptimized={true} සහ quality={100} මඟින් ඔරිජිනල් ඉමේජ් එක ඒ විදිහටම පැහැදිලිව පෙන්වීම */}
           <Image
             src={slide.image}
             alt={slide.title}
             width={1200}
             height={525}
-            quality="max"
+            quality={100}
+            unoptimized={true}
             loading={index === 0 ? "eager" : "lazy"}
             decoding="async"
-            /* MAXIMUM CLARITY: කිසිදු අඳුරු ශේඩින් එකක් නැත, පින්තූරය මුල් පිටපත වගේම පිරිසිදුව පෙනේ */
             class="w-full h-full object-cover object-center transition duration-700 group-hover:scale-[1.01]"
           />
           
-          {/* ONLY CATEGORY TAG OVERLAY */}
+          {/* CATEGORY TAG OVERLAY */}
           <div class="absolute bottom-3 left-4 z-20">
             <span class="bg-primary text-white px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded uppercase tracking-wider shadow-md pointer-events-none">
               {humanize(slide.category)}
@@ -64,12 +65,12 @@ const demoSlides = [
       </div>
     ))}
 
-    {/* 🧩 FINE PARTICLES (පොඩි කැට ඉහළට යන) ANIMATION CANVAS LAYER */}
-    <canvas id="particle-transition-canvas" class="absolute inset-0 pointer-events-none z-30 hidden w-full h-full"></canvas>
+    {/* 🧩 FINE PARTICLES CANVAS LAYER - Z-INDEX එක මැදට ගැලපුවා පරණ පින්තූරයට උඩින් සහ අලුත් එකට යටින් වැඩ කරන්න */}
+    <canvas id="particle-transition-canvas" class="absolute inset-0 pointer-events-none z-25 hidden w-full h-full"></canvas>
   </div>
 
   {/* NAVIGATION DOTS */}
-  <div class="absolute bottom-3 right-4 flex gap-1.5 z-20">
+  <div class="absolute bottom-3 right-4 flex gap-1.5 z-30">
     {demoSlides.map((_, index) => (
       <button
         class={`w-2 h-2 rounded-full transition-all duration-300 slider-dot ${index === 0 ? 'bg-primary scale-125' : 'bg-white/50'}`}
@@ -99,7 +100,6 @@ const demoSlides = [
     let slideInterval: any;
     let isAnimating = false;
 
-    // Canvas ප්‍රමාණය සයිස් එකට සකස් කිරීම
     function resizeCanvas() {
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
@@ -107,7 +107,7 @@ const demoSlides = [
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // කැට (Particles) ව්‍යුහය
+    // පොඩි කැට (Fine Particles) ව්‍යුහය
     class Particle {
       x: number;
       y: number;
@@ -119,12 +119,12 @@ const demoSlides = [
       constructor(startX: number, startY: number) {
         this.x = startX;
         this.y = startY;
-        // පොඩි කැට අවශ්‍ය නිසා සයිස් එක 1.5 සිට 4 දක්වා සකස් කළා
-        this.size = Math.random() * 2.5 + 1.5;
-        // ඉහළට ගමන් කරන වේගය
-        this.speedY = -(Math.random() * 2 + 1.5);
+        // පොඩි කැට ලබා ගැනීමට ප්‍රමාණය 1.2 සිට 3.5 දක්වා සකස් කළා
+        this.size = Math.random() * 2.3 + 1.2;
+        // ඉහළට යන වේගය
+        this.speedY = -(Math.random() * 2.5 + 1.5);
         this.alpha = 1;
-        this.fadeSpeed = Math.random() * 0.015 + 0.008;
+        this.fadeSpeed = Math.random() * 0.02 + 0.01;
       }
 
       update() {
@@ -135,7 +135,7 @@ const demoSlides = [
       draw(context: CanvasRenderingContext2D) {
         context.save();
         context.globalAlpha = Math.max(0, this.alpha);
-        context.fillStyle = '#090d16'; // සයිට් එකේ ඩාර්ක් පසුබිමට ගැළපෙන පොඩි කැට
+        context.fillStyle = 'rgba(255, 255, 255, 0.75)'; // පින්තූරය උඩින් ලස්සනට කැපී පෙනෙන අර්ධ-පාරදෘශ්‍ය සුදු/අළු කැට
         context.beginPath();
         context.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         context.fill();
@@ -150,26 +150,24 @@ const demoSlides = [
       particles = [];
       let animationFrameId: number;
       let startTime = Date.now();
-      const duration = 1200; // ඇනිමේෂන් එක පවතින කාලය (මිලි තත්පර 1200)
+      const duration = 1200; // මිලි තත්පර 1200 ක කාලයක්
       let callbackTriggered = false;
 
       function loop() {
         const elapsed = Date.now() - startTime;
         ctx!.clearRect(0, 0, canvas.width, canvas.height);
 
-        // පැත්තක ඉඳන් කැට ක්‍රමයෙන් මතුවෙමින් ඉහළට යාම (Wave Effect)
-        if (elapsed < duration * 0.6) {
-          const waveX = (elapsed / (duration * 0.6)) * canvas.width;
-          // එක පාරකට ජනිත වන පොඩි කැට ගණන
-          for (let i = 0; i < 15; i++) {
-            const startX = waveX - Math.random() * 80;
+        // වමේ සිට දකුණට රැල්ලක් මෙන් (Wave Effect) කැට මතුවෙමින් ඉහළට යාම
+        if (elapsed < duration * 0.7) {
+          const waveX = (elapsed / (duration * 0.7)) * canvas.width;
+          for (let i = 0; i < 20; i++) {
+            const startX = waveX - Math.random() * 120;
             if (startX > 0 && startX < canvas.width) {
-              particles.push(new Particle(startX, canvas.height - Math.random() * canvas.height));
+              particles.push(new Particle(startX, canvas.height - Math.random() * 30));
             }
           }
         }
 
-        // කැට අප්ඩේට් කර ඇඳීම
         particles.forEach((particle, index) => {
           particle.update();
           particle.draw(ctx!);
@@ -178,7 +176,7 @@ const demoSlides = [
           }
         });
 
-        // හරියටම මැද හරියේදී (පරණ පින්තූරය උපරිම බොඳ වූ විට) අලුත් පින්තූරය මාරු කිරීම
+        // 100% NO BLACK SCREEN: මැද හරියේදී අලුත් පින්තූරයට මාරු කිරීම සිදු කරයි
         if (elapsed >= duration * 0.4 && !callbackTriggered) {
           callbackTriggered = true;
           callback();
@@ -202,17 +200,17 @@ const demoSlides = [
       const currentSlide = slides[currentIndex];
       const nextSlide = slides[nextIndex];
 
-      // 1. පරණ පින්තූරය ටික ටික බොඳ (Blur) වෙන්න සහ මැකෙන්න පටන් ගැනීම
-      currentSlide.style.filter = 'blur(12px)';
-      currentSlide.style.opacity = '0';
-      currentSlide.style.zIndex = '5'; // කළු පසුබිම නොවී වැසී පෙනෙන්න මැද අගයක් දීම
-
-      // 2. අලුත් පින්තූරය යටින් ලස්සනට මතු වීම (Cross-fade overlay)
-      nextSlide.style.filter = 'blur(0px)';
+      // 1. මුලින්ම අලුත් පින්තූරය සෙමින් යටින් සූදානම් කර තැබීම (Z-Index එක 15 දීලා කළු පසුබිම සම්පූර්ණයෙන්ම වසනවා)
       nextSlide.style.opacity = '1';
-      nextSlide.style.zIndex = '10';
+      nextSlide.style.filter = 'blur(0px)';
+      nextSlide.style.zIndex = '15';
 
-      // 3. පොඩි කැට ඉහළට යන ඇනිමේෂන් එක ක්‍රියාත්මක කිරීම
+      // 2. පරණ පින්තූරය උඩින් තබාගෙන එය බ්ලර් කරමින් මැකී යාමට සැලැස්වීම
+      currentSlide.style.zIndex = '20';
+      currentSlide.style.filter = 'blur(15px)';
+      currentSlide.style.opacity = '0';
+
+      // 3. කැට ඇනිමේෂන් එක රන් කිරීම
       animateParticles(() => {
         // ඩොට්ස් අප්ඩේට් කිරීම
         dots.forEach((dot, i) => {
@@ -225,10 +223,11 @@ const demoSlides = [
           }
         });
 
-        // පරණ ස්ලයිඩරයේ ස්ටයිල් රීසෙට් කිරීම (පසුකාලීන භාවිතය සඳහා)
+        // ඇනිමේෂන් එක ඉවර වුණාම z-index පිළිවෙල මාරු කිරීම
         setTimeout(() => {
+          nextSlide.style.zIndex = '20';
           currentSlide.style.filter = 'blur(0px)';
-          currentSlide.style.zIndex = '0';
+          currentSlide.style.zIndex = '10';
         }, 1200);
 
         currentIndex = nextIndex;
@@ -262,7 +261,6 @@ const demoSlides = [
     startInterval();
   }
 
-  // Astro View Transitions සඳහා ගැළපීම
   document.addEventListener('astro:page-load', initFineParticleSlider);
   initFineParticleSlider();
 </script>

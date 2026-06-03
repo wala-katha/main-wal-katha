@@ -11,44 +11,49 @@ type Props = {
 const { posts } = Astro.props;
 ---
 
-<div class="row gy-4 gx-2 sm:gx-4 justify-center">
-  {
-    posts.map((post) => (
-      /* 🎯 UI & SEO GRID FIX: මොබයිල්, ටැබ්, ඩෙස්ක්ටොප් හැම එකකදීම එක පේළියට පෝස්ට් 3 බැගින් පේළි දෙකකට පෝස්ට් 6ක් හැඩගැස්වීම */
-      <div class="col-4 flex flex-col justify-between group mb-4 text-center">
-        {post.data.image && (
-          <a
-            href={`/blog/${post.id}/`} /* ⚠️ FIXED: නිවැරදි Astro Content Layer URL එක */
-            class="rounded-lg block overflow-hidden group relative bg-gray-900 transition-all duration-300"
-            style="aspect-ratio: 2 / 3;" /* ⚡ ලස්සන කෙළින් අතට 2:3 Ratio එක */
-          >
-            {/* 👑 PREMIUM GOLDEN FRAME BAR FIX: 
-                බෝඩර් එක සහ ග්ලෝ එක පින්තූරයටම වැදෙන සේ සකස් කළා. 
-                Dull Gold (#D4AF37) සහ Bright Gold (#FFD700) පැහැදිලිවම කැපී පෙනේ. */}
-            <Image
-              class="w-full h-full object-contain rounded-lg border-2 border-[#D4AF37] group-hover:border-[#FFD700] group-hover:scale-[1.03] transition-all duration-300 shadow-[0_0_1px_rgba(0,0,0,0)] group-hover:shadow-[0_0_18px_rgba(255,215,0,0.7)]"
-              src={post.data.image}
-              alt={post.data.title}
-              width={500}
-              height={750}
-              loading="lazy"
-              decoding="async"
-            />
-          </a>
-        )}
-        
-        {/* INFO ROW: මැදට පෙළගස්වා මොබයිල් තිර වලට ගැළපෙන සේ මෙටා ඩේටා අකුරු ලස්සනට කුඩා කළා */}
-        <ul class="mt-2 mb-1 flex flex-wrap items-center text-text text-[10px] sm:text-xs justify-center gap-x-2">
-          <li class="flex items-center flex-wrap">
-            <BiCategoryAlt className="mr-0.5 h-3 w-3 sm:h-[14px] sm:w-[14px] text-gray-600" />
-            <ul>
-              {post.data.categories.slice(0, 1).map((category: string) => (
-                <li class="inline-block">
-                  <a
-                    href={`/categories/${slugify(category)}/`}
-                    class="hover:text-primary font-bold text-[9px] sm:text-xs bg-gray-100 dark:bg-darkmode-theme-light px-1 sm:px-2 py-0.5 rounded"
-                  >
-                    {humanize(category)}
+{/* 👑 PREMIUM SMOOTH GRADIENT BACKGROUND FIX: 
+    සුදු පසුබිමෙන් පටන් අරන් පල්ලෙහාට යද්දි සියුම්ව තද ප්‍රිමියම් අළු/තද පැහැයකට හැරෙන (Fade-in) පරිදි පසුබිම හැඩගැස්වීම. 
+    Dark Mode එකටත් ඔටෝ ගැළපෙන සේ සකසා ඇත. */}
+<div class="w-full bg-gradient-to-b from-transparent via-gray-50/50 to-gray-100/80 dark:from-transparent dark:via-darkmode-body/30 dark:to-darkmode-theme-light/50 p-4 sm:p-6 rounded-2xl transition-all duration-300">
+  
+  <div class="row gy-4 gx-2 sm:gx-4 justify-center">
+    {
+      posts.map((post) => (
+        /* 🎯 UI & SEO GRID FIX: මොබයිල්, ටැබ්, ඩෙස්ක්ටොප් හැම එකකදීම එක පේළියට පෝස්ට් 3 බැගින් පේළි දෙකකට පෝස්ට් 6ක් හැඩගැස්වීම */
+        <div class="col-4 flex flex-col justify-between group mb-4 text-center">
+          {post.data.image && (
+            <a
+              href={`/blog/${post.id}/`} /* ⚠️ FIXED: නිවැරදි Astro Content Layer URL එක */
+              class="rounded-lg block overflow-hidden group relative bg-gray-900 transition-all duration-300 mx-auto w-full"
+              style="aspect-ratio: 3 / 4;" /* ⚡ FIX: උස දශමයක් අඩු කර කාඩ් එක වඩාත් පිළිවෙළ කිරීමට Ratio එක 3:4 කළා */
+            >
+              {/* 👑 PREMIUM GOLDEN FRAME BAR FIX: 
+                  බෝඩර් එක සහ ග්ලෝ එක පින්තූරයටම වැදෙන සේ සකස් කළා. 
+                  Dull Gold (#D4AF37) සහ Bright Gold (#FFD700) පැහැදිලිවම කැපී පෙනේ. */}
+              <Image
+                class="w-full h-full object-contain rounded-lg border-2 border-[#D4AF37] group-hover:border-[#FFD700] group-hover:scale-[1.03] transition-all duration-300 shadow-[0_0_1px_rgba(0,0,0,0)] group-hover:shadow-[0_0_18px_rgba(255,215,0,0.7)]"
+                src={post.data.image}
+                alt={post.data.title}
+                width={500}
+                height={666} /* ⚡ Ratio එකට ගැළපෙන සේ උස ප්‍රමාණය නූලටම වෙනස් කළා */
+                loading="lazy"
+                decoding="async"
+              />
+            </a>
+          )}
+          
+          {/* INFO ROW: මැදට පෙළගස්වා මොබයිල් තිර වලට ගැළපෙන සේ මෙටා ඩේටා අකුරු ලස්සනට කුඩා කළා */}
+          <ul class="mt-2 mb-1 flex flex-wrap items-center text-text text-[10px] sm:text-xs justify-center gap-x-2">
+            <li class="flex items-center flex-wrap">
+              <BiCategoryAlt className="mr-0.5 h-3 w-3 sm:h-[14px] sm:w-[14px] text-gray-600" />
+              <ul>
+                {post.data.categories.slice(0, 1).map((category: string) => (
+                  <li class="inline-block">
+                    <a
+                      href={`/categories/${slugify(category)}/`}
+                      class="hover:text-primary font-bold text-[9px] sm:text-xs bg-gray-100 dark:bg-darkmode-theme-light px-1 sm:px-2 py-0.5 rounded"
+                    >
+                      {humanize(category)}
                   </a>
                 </li>
               ))}
@@ -72,4 +77,6 @@ const { posts } = Astro.props;
       </div>
     ))
   }
+  </div>
+
 </div>

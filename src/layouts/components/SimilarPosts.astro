@@ -1,107 +1,66 @@
 ---
-import { Image } from "astro:assets";
-import Share from "@/components/Share.astro";
-import SimilarPosts from "@/layouts/components/SimilarPosts.astro"; // ⚠️ තහවුරු කරගන්න: කම්පෝනන්ට් එක නිවැරදිව import කර ඇත
-import { markdownify } from "@/lib/utils/textConverter";
-import { slugify, humanize } from "@/lib/utils/textConverter";
-import { getSinglePage } from "@/lib/contentParser.astro";
 import dateFormat from "@/lib/utils/dateFormat";
+import { humanize, slugify } from "@/lib/utils/textConverter";
+import { Image } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
 import { BiCalendarEdit, BiCategoryAlt } from "react-icons/bi";
 
-const { post } = Astro.props;
-const { title, description, image, date, categories, tags, authors } = post.data;
-const { Content } = await post.render();
-
-// 🎯 FLAWLESS RELATED POSTS LOGIC:
-const allPosts = await getSinglePage("posts");
-
-// 1. දැනට කියවන පෝස්ට් එක අයින් කර සමාන කැටගරි තියෙන පෝස්ට් පෙරීම
-let relatedPosts = allPosts.filter(
-  (p) => p.id !== post.id && p.data.categories?.some((cat) => categories?.includes(cat))
-);
-
-// 2. ⚡ SEO FALLBACK: සමාන කැටගරි නැත්නම්, සයිට් එකේ තියෙන වෙනත් ඕනෑම පෝස්ට් 3ක් ඔටෝ අරන් පෙන්වීම (හිස්ව පවතින්න දෙන්නේ නැත)
-if (relatedPosts.length === 0) {
-  relatedPosts = allPosts.filter((p) => p.id !== post.id);
-}
-
-// 3. පෝස්ට් 3කට සීමා කිරීම
-relatedPosts = relatedPosts.slice(0, 3);
+type Props = {
+  posts: CollectionEntry<"posts">[];
+};
+const { posts } = Astro.props;
 ---
 
-<article class="section pt-7">
-  <div class="container">
-    <div class="row justify-center">
-      <div class="col-12 md:col-10 lg:col-8">
-        
-        {/* CATEGORY TAG */}
-        <div class="mb-4">
-          {categories && categories.map((category: string) => (
-            <a
-              href={`/categories/${slugify(category)}/`}
-              class="bg-primary/10 text-primary font-bold text-xs px-3 py-1 rounded-full hover:bg-primary hover:text-white transition-all uppercase tracking-wider"
-            >
-              {humanize(category)}
-            </a>
-          ))}
-        </div>
-
-        {/* POST TITLE */}
-        <h1 class="h2 mb-4 leading-tight" set:html={markdownify(title)} />
-
-        {/* POST META */}
-        <ul class="mb-6 flex flex-wrap items-center text-text text-xs sm:text-sm gap-4 border-b border-gray-100 pb-4">
-          <li class="flex items-center">
-            <BiCalendarEdit className="mr-1.5 h-4 w-4 text-gray-500" />
-            {dateFormat(date!)}
-          </li>
-          {authors && authors.length > 0 && (
-            <li class="flex items-center">
-              <BiCategoryAlt className="mr-1.5 h-4 w-4 text-gray-500" />
-              <span class="text-gray-600">By {authors[0]}</span>
-            </li>
-          )}
-        </ul>
-
-        {/* MAIN IMAGE */}
-        {image && (
-          <div class="mb-8 rounded-xl overflow-hidden max-w-2xl mx-auto shadow-md">
+<div class="row gy-4 justify-center">
+  {
+    posts.map((post, i: number) => (
+      <div class={`col-12 sm:col-6 md:col-4 ${i === 2 && "hidden md:block"}`}>
+        {post.data.image && (
+          <a
+            href={`/${post.slug}`}
+            class="rounded-lg block hover:text-primary overflow-hidden group"
+          >
             <Image
-              src={image}
-              class="w-full h-auto object-cover"
-              alt={title}
-              width={800}
-              height={500}
-              loading="eager"
-              decoding="async"
+              class="group-hover:scale-[1.05] transition duration-300 w-full"
+              src={post.data.image}
+              alt={post.data.title}
+              width={445}
+              height={230}
             />
-          </div>
+          </a>
         )}
+        <ul class="mt-4 text-text flex flex-wrap items-center text-sm">
+          <li class="mb-2 mr-4 flex items-center flex-wrap font-medium">
+            <BiCalendarEdit className="mr-1 h-[16px] w-[16px] text-gray-600" />
+            {dateFormat(post.data.date!)}
+          </li>
+          <li class="mb-2 mr-4 flex items-center flex-wrap">
+            <BiCategoryAlt className="mr-1 h-[16px] w-[16px] text-gray-600" />
 
-        {/* POST CONTENT */}
-        <div class="content mb-10">
-          <Content />
-        </div>
-
-        {/* SHARE BUTTONS */}
-        <div class="border-t border-b border-gray-100 py-4 mb-12 flex items-center justify-between flex-wrap gap-4">
-          <span class="text-sm font-bold text-dark dark:text-darkmode-text">මෙම කතාව යාළුවන්ටත් කියවන්න Share කරන්න:</span>
-          <Share title={title} description={description} slug={post.id} />
-        </div>
-
-        {/* 🚀 [SMART SUGGESTION ZONE] RELATED POSTS INTEGRATION */}
-        {relatedPosts.length > 0 && (
-          <div class="mt-14 border-t border-gray-200 dark:border-darkmode-border pt-10">
-            <h3 class="text-sm sm:text-base font-bold text-dark dark:text-darkmode-text border-l-4 border-primary pl-3 mb-6">
-              ඔබ කැමති විය හැකි තවත් කතා (Suggested Stories)
-            </h3>
-            
-            {/* මෙතනින් තමයි ඔයා හැදූ SimilarPosts.astro එකට දත්ත පාස් කරලා පෙන්වන්නේ */}
-            <SimilarPosts posts={relatedPosts} />
-          </div>
-        )}
-
+            <ul>
+              {post.data.categories.map((category: string, i: number) => (
+                <li class="inline-block">
+                  <a
+                    href={`/categories/${slugify(category)}`}
+                    class="mr-2 hover:text-primary font-medium"
+                  >
+                    {humanize(category)}
+                    {i !== post.data.categories.length - 1 && ","}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </li>
+        </ul>
+        <h3 class="h5">
+          <a
+            href={`/${post.slug}`}
+            class="block hover:text-primary transition duration-300"
+          >
+            {post.data.title}
+          </a>
+        </h3>
       </div>
-    </div>
-  </div>
-</article>
+    ))
+  }
+</div>

@@ -15,7 +15,7 @@ type Props = {
 const authors = await getSinglePage("authors");
 const { className, posts, fluid } = Astro.props;
 
-// 🎯 GLOBAL HARVESTING SEO FIX: පිටුවෙන් පිටුවට Tags වෙනස් වීම වැළැක්වීමට මුළු සයිට් එකේම පෝස්ට් ඔක්කොම නැවත කැඳවා ගෝලීයව Tags එකතු කිරීම
+// 🎯 GLOBAL HARVESTING SEO: පිටුවෙන් පිටුවට Tags වෙනස් වීම වැළැක්වීමට මුළු සයිට් එකේම පෝස්ට් ගෝලීයව එකතු කිරීම
 const allGlobalPosts = await getSinglePage("posts");
 const allTags = allGlobalPosts.flatMap((post) => post.data.tags || []);
 const uniqueTags = [...new Set(allTags)].filter(Boolean);
@@ -116,32 +116,37 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
     }
   </div>
 
-  {/* 🏷️ Blogger Style Labels Section (Global & Fixed across all pages) */}
+  {/* 🏷️ Blogger Style Labels Section (Strict SEO & Fixed Layout) */}
   {uniqueTags.length > 0 && (
     <div class="mt-12 p-4 sm:p-6 bg-gray-50 dark:bg-darkmode-theme-light rounded-xl border border-gray-100 dark:border-darkmode-border">
       <div class="flex items-center gap-2 mb-4 border-b border-gray-200 dark:border-darkmode-border pb-2">
-        <BiPurchaseTagAlt className="text-primary h-5 w-5 animate-pulse" />
+        <BiPurchaseTagAlt className="text-primary h-5 w-5" />
         <h4 class="text-sm sm:text-base font-bold text-dark dark:text-darkmode-text">Labels (ටැග්ස්)</h4>
       </div>
       
       {/* Tags Wrapper */}
       <div class="relative flex flex-col">
-        <div class="flex flex-wrap gap-2 transition-all duration-500 ease-in-out" id="tags-toggle-container">
-          {uniqueTags.map((tag, index) => (
-            <a
-              href={`/tags/${slugify(tag)}/`}
-              rel="tag"
-              /* 100% FIXED: bg-gray-950 වටේට පැහැදිලිව පෙනෙන විදිහට අකුරු font-bold කර, අකුරු පමණක් බ්ලින්ක් වන ක්ලාස් එක (animate-text-blink) ඇතුළත් කළා */
-              class={`text-[11px] sm:text-xs bg-gray-950 dark:bg-black text-white font-bold tracking-wide px-2.5 py-1.5 rounded-md border border-gray-900 hover:bg-primary hover:text-white dark:hover:bg-primary transition-all shadow-sm flex items-center gap-1 tag-item animate-text-blink ${index >= 12 ? 'hidden-tag hidden' : ''}`}
-              title={`${tag} කතා සියල්ල මෙතනින් බලන්න`}
-              aria-label={`View posts tagged with ${tag}`}
-            >
-              <span class="opacity-60 text-white">#</span>{humanize(tag)}
-            </a>
-          ))}
-        </div>
+        {/* SEO Semantic Navigation Layout */}
+        <nav aria-label="Tags Cloud" class="transition-all duration-300 ease-in-out overflow-hidden max-h-[110px]" id="tags-toggle-container">
+          <ul class="flex flex-wrap gap-2 m-0 p-0 list-none">
+            {uniqueTags.map((tag, index) => (
+              <li class={`tag-item-wrap ${index >= 12 ? 'hidden-tag hidden' : ''}`}>
+                <a
+                  href={`/tags/${slugify(tag)}/`}
+                  rel="tag"
+                  /* 100% FIX: font-black (Extra Bold) මඟින් සුදු අකුරු ඝනකම් කර, සියලුම බ්ලින්ක් ඇනිමේෂන් ඉවත් කර Clean කරන ලදී */
+                  class="text-[11px] sm:text-xs bg-gray-950 dark:bg-black text-white font-black tracking-wide px-2.5 py-1.5 rounded-md border border-gray-900 hover:bg-primary hover:text-white dark:hover:bg-primary transition-all shadow-sm flex items-center gap-0.5"
+                  title={`${tag} කතා සියල්ල මෙතනින් බලන්න`}
+                  aria-label={`View posts tagged with ${tag}`}
+                >
+                  <span class="opacity-50 text-white font-normal">#</span>{humanize(tag)}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
-        {/* 🔘 SHOW ALL / SHOW LESS BUTTON (හැම පිටුවකම නොවෙනස්ව ස්ථිරවම පවතී) */}
+        {/* 🔘 SHOW ALL / SHOW LESS BUTTON */}
         {uniqueTags.length > 12 && (
           <div class="mt-5 flex justify-center w-full">
             <button
@@ -158,13 +163,14 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
   )}
 </div>
 
-{/* SMOOTH SHOW MORE / LESS SCRIPT (ASTRO COMPATIBLE) */}
+{/* SMOOTH TRANSITION SCRIPT (ASTRO COMPATIBLE) */}
 <script>
   function initTagsToggler() {
     const btn = document.getElementById('btn-toggle-tags');
+    const container = document.getElementById('tags-toggle-container');
     const hiddenTags = document.querySelectorAll('.hidden-tag');
     
-    if (!btn || hiddenTags.length === 0) return;
+    if (!btn || !container || hiddenTags.length === 0) return;
     
     let isOpen = false;
     
@@ -172,47 +178,26 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
       isOpen = !isOpen;
       
       if (isOpen) {
-        hiddenTags.forEach(tag => {
-          tag.classList.remove('hidden');
-          tag.classList.add('animate-fade-in');
-        });
+        // සියලුම Tags පෙන්වීම (Smooth Max-Height Transition)
+        container.style.maxHeight = '2000px';
+        hiddenTags.forEach(tag => tag.classList.remove('hidden'));
         btn.querySelector('span')!.textContent = 'Show Less';
       } else {
-        hiddenTags.forEach(tag => {
-          tag.classList.add('hidden');
-          tag.classList.remove('animate-fade-in');
-        });
+        // නැවත මුල් උසට කුඩා කිරීම
+        container.style.maxHeight = '110px';
         btn.querySelector('span')!.textContent = 'Show All Tags';
+        
+        // සජීවීව හැකිලෙන අතරතුර පෙනුම ආරක්ෂා කර ගැනීමට පොඩි Delay එකක් තබා සැඟවීම
+        setTimeout(() => {
+          if (!isOpen) {
+            hiddenTags.forEach(tag => tag.classList.add('hidden'));
+          }
+        }, 300);
       }
     });
   }
 
-  // Astro View Transitions සහ සාමාන්‍ය පේජ් ලෝඩ්ස් දෙකටම 100% ගැලපීම
+  // Astro View Transitions සඳහා පූර්ණ අනුකූලතාවය
   document.addEventListener('astro:page-load', initTagsToggler);
   initTagsToggler();
 </script>
-
-<style>
-  /* ⚡ 100% FIXED ANIMATION: කළු පසුබිම වෙනස් නොවී, බටන් එක ඇතුළේ ඇති සුදු අකුරු පමණක් කළු වී නැවත සුදු වන ඇනිමේෂන් එක */
-  .animate-text-blink {
-    animation: textBlink 2.5s infinite ease-in-out;
-  }
-
-  @keyframes textBlink {
-    0%, 100% {
-      color: #ffffff; /* සුදු අකුරු */
-    }
-    50% {
-      color: #000000; /* මැදදී කළු අකුරු */
-    }
-  }
-
-  /* ටැග්ස් පල්ලෙහාට පාත් වෙද්දී පෙනෙන smooth ඇනිමේෂන් එක */
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease-in-out forwards;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-</style>

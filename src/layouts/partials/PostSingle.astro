@@ -1,9 +1,8 @@
 ---
 import Share from "@/components/Share.astro";
-import SimilarPosts from "@/components/SimilarPosts.astro";
+import SimilarPosts from "@/layouts/components/SimilarPosts.astro"; // ⚠️ FIXED: නිවැරදි ෆෝල්ඩර් පාත් එකට අප්ඩේට් කළා
 import { getSinglePage } from "@/lib/contentParser.astro";
 import dateFormat from "@/lib/utils/dateFormat";
-import similerItems from "@/lib/utils/similarItems";
 import { humanize, markdownify, slugify } from "@/lib/utils/textConverter";
 import { Image } from "astro:assets";
 import { render } from "astro:content";
@@ -12,10 +11,23 @@ import { BiCalendarEdit, BiCategoryAlt } from "react-icons/bi";
 const allAuthors = await getSinglePage("authors");
 const posts = await getSinglePage("posts");
 const { post } = Astro.props;
-const similarPosts = similerItems(post, posts, post.slug);
 const { Content } = await render(post);
 const { title, description, authors, categories, image, date, tags } =
   post.data;
+
+// 🎯 SMART SEO RELATED POSTS LOGIC:
+// 1. දැනට කියවන පෝස්ට් එක අයින් කර සමාන කැටගරි තියෙන පෝස්ට් පෙරීම
+let smartSimilarPosts = posts.filter(
+  (p) => p.id !== post.id && p.data.categories?.some((cat) => categories?.includes(cat))
+);
+
+// 2. ⚡ SEO FALLBACK: සමාන කැටගරි නැත්නම්, සයිට් එකේ තියෙන වෙනත් ඕනෑම පෝස්ට් ඔටෝ අරන් පෙන්වීම (හිස්ව තැබීම SEO වලට අහිතකරයි)
+if (!smartSimilarPosts || smartSimilarPosts.length === 0) {
+  smartSimilarPosts = posts.filter((p) => p.id !== post.id);
+}
+
+// 3. පෝස්ට් 3කට සීමා කිරීම (හෝම් පේජ් එකේ වගේ එක පේළියට ලස්සනට වාඩි වෙන්න)
+const finalSimilarPosts = smartSimilarPosts.slice(0, 3);
 ---
 
 <section class="section">
@@ -67,7 +79,7 @@ const { title, description, authors, categories, image, date, tags } =
                       class="mr-2 hover:text-primary font-medium"
                     >
                       {humanize(category)}
-                      {i !== post.data.categories.length - 1 && ","}
+                      {i !== categories.length - 1 && ","}
                     </a>
                   </li>
                 ))
@@ -85,7 +97,8 @@ const { title, description, authors, categories, image, date, tags } =
               height={500}
               width={1000}
               alt={title}
-              class="rounded-lg"
+              class="rounded-lg w-full h-auto object-cover mx-auto max-w-4xl"
+              loading="eager"
             />
           )
         }
@@ -122,13 +135,16 @@ const { title, description, authors, categories, image, date, tags } =
   </div>
 </section>
 
-<!-- similar posts -->
 {
-  similarPosts.length > 0 && (
+  finalSimilarPosts.length > 0 && (
     <section class="section pt-0">
       <div class="container">
-        <h2 class="mb-8 text-center h3">Similar Posts</h2>
-        <SimilarPosts posts={similarPosts.slice(0, 3)} />
+        {/* බ්ලොගර් ස්ටයිල් එකට ගැළපෙන සිංහල ටයිටල් එකක් දුන්නා */}
+        <h2 class="mb-8 font-black text-left h4 border-l-4 border-primary pl-3 text-dark dark:text-darkmode-text">
+          ඔබ කැමති විය හැකි තවත් කතා (Suggested Stories)
+        </h2>
+        {/* හෝම් පේජ් එකේ වගේම 2:3 Grid එකට පෝස්ට් කාඩ් පෙන්වීමට දත්ත පාස් කිරීම */}
+        <SimilarPosts posts={finalSimilarPosts} />
       </div>
     </section>
   )

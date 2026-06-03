@@ -15,8 +15,9 @@ type Props = {
 const authors = await getSinglePage("authors");
 const { className, posts, fluid } = Astro.props;
 
-// 🎯 HIGH-PERFORMANCE SEO: සයිට් එකේ තියෙන හැම පෝස්ට් එකකින්ම අද්විතීය (Unique) Tags ටික ඔටෝමැටිකවම එකතු කරගැනීම
-const allTags = posts.flatMap((post) => post.data.tags || []);
+// 🎯 GLOBAL HARVESTING SEO FIX: පිටුවෙන් පිටුවට Tags වෙනස් වීම වැළැක්වීමට මුළු සයිට් එකේම පෝස්ට් ඔක්කොම නැවත කැඳවා ගෝලීයව Tags එකතු කිරීම
+const allGlobalPosts = await getSinglePage("posts");
+const allTags = allGlobalPosts.flatMap((post) => post.data.tags || []);
 const uniqueTags = [...new Set(allTags)].filter(Boolean);
 ---
 
@@ -115,7 +116,7 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
     }
   </div>
 
-  {/* 🏷️ Blogger Style Labels Section (SEO Optimized) */}
+  {/* 🏷️ Blogger Style Labels Section (Global & Fixed across all pages) */}
   {uniqueTags.length > 0 && (
     <div class="mt-12 p-4 sm:p-6 bg-gray-50 dark:bg-darkmode-theme-light rounded-xl border border-gray-100 dark:border-darkmode-border">
       <div class="flex items-center gap-2 mb-4 border-b border-gray-200 dark:border-darkmode-border pb-2">
@@ -125,21 +126,22 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
       
       {/* Tags Wrapper */}
       <div class="relative flex flex-col">
-        {/* BUTTON එක හැංගීම වැළැක්වීමට max-h එක ඉවත් කර ලිස්ට් එක පාලනය ජාවාස්ක්‍රිප්ට් එකට පමණක් භාර දුන්නා */}
         <div class="flex flex-wrap gap-2 transition-all duration-500 ease-in-out" id="tags-toggle-container">
           {uniqueTags.map((tag, index) => (
             <a
               href={`/tags/${slugify(tag)}/`}
               rel="tag"
-              class={`text-[11px] sm:text-xs bg-gray-950 dark:bg-black text-white px-2.5 py-1.5 rounded-md border border-gray-900 hover:bg-primary hover:text-white dark:hover:bg-primary transition-all font-medium shadow-sm flex items-center gap-1 tag-item ${index >= 12 ? 'hidden-tag hidden' : ''}`}
-              title={`${tag} කතා බලන්න`}
+              /* 100% FIXED: bg-gray-950 වටේට පැහැදිලිව පෙනෙන විදිහට අකුරු font-bold කර, අකුරු පමණක් බ්ලින්ක් වන ක්ලාස් එක (animate-text-blink) ඇතුළත් කළා */
+              class={`text-[11px] sm:text-xs bg-gray-950 dark:bg-black text-white font-bold tracking-wide px-2.5 py-1.5 rounded-md border border-gray-900 hover:bg-primary hover:text-white dark:hover:bg-primary transition-all shadow-sm flex items-center gap-1 tag-item animate-text-blink ${index >= 12 ? 'hidden-tag hidden' : ''}`}
+              title={`${tag} කතා සියල්ල මෙතනින් බලන්න`}
+              aria-label={`View posts tagged with ${tag}`}
             >
-              <span class="opacity-70 text-white font-bold">#</span>{humanize(tag)}
+              <span class="opacity-60 text-white">#</span>{humanize(tag)}
             </a>
           ))}
         </div>
 
-        {/* 🔘 SHOW ALL / SHOW LESS BUTTON (100% FIXED: කිසිවිටකත් නොසැඟවී පැහැදිලිව පෙනේ) */}
+        {/* 🔘 SHOW ALL / SHOW LESS BUTTON (හැම පිටුවකම නොවෙනස්ව ස්ථිරවම පවතී) */}
         {uniqueTags.length > 12 && (
           <div class="mt-5 flex justify-center w-full">
             <button
@@ -170,30 +172,42 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
       isOpen = !isOpen;
       
       if (isOpen) {
-        // සියලුම ටැග්ස් පෙන්වීම
         hiddenTags.forEach(tag => {
           tag.classList.remove('hidden');
-          // Smooth fade-in එකක් සඳහා
           tag.classList.add('animate-fade-in');
         });
         btn.querySelector('span')!.textContent = 'Show Less';
       } else {
-        // නැවත මුල් තත්ත්වයට පත් කර Tags 12ක් පමණක් පෙන්වීම
         hiddenTags.forEach(tag => {
           tag.classList.add('hidden');
+          tag.classList.remove('animate-fade-in');
         });
         btn.querySelector('span')!.textContent = 'Show All Tags';
       }
     });
   }
 
-  // Astro View Transitions සහ සාමාන්‍ය ලෝඩ් වීම් දෙකටම ගැළපීම (Strict SEO Fix)
+  // Astro View Transitions සහ සාමාන්‍ය පේජ් ලෝඩ්ස් දෙකටම 100% ගැලපීම
   document.addEventListener('astro:page-load', initTagsToggler);
   initTagsToggler();
 </script>
 
 <style>
-  /* ටැග්ස් එක පාරටම පාත් වෙද්දී ඇස් වලට ලස්සනට පෙනෙන්න කුඩා ඇනිමේෂන් එකක් */
+  /* ⚡ 100% FIXED ANIMATION: කළු පසුබිම වෙනස් නොවී, බටන් එක ඇතුළේ ඇති සුදු අකුරු පමණක් කළු වී නැවත සුදු වන ඇනිමේෂන් එක */
+  .animate-text-blink {
+    animation: textBlink 2.5s infinite ease-in-out;
+  }
+
+  @keyframes textBlink {
+    0%, 100% {
+      color: #ffffff; /* සුදු අකුරු */
+    }
+    50% {
+      color: #000000; /* මැදදී කළු අකුරු */
+    }
+  }
+
+  /* ටැග්ස් පල්ලෙහාට පාත් වෙද්දී පෙනෙන smooth ඇනිමේෂන් එක */
   .animate-fade-in {
     animation: fadeIn 0.3s ease-in-out forwards;
   }

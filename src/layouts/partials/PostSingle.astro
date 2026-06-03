@@ -21,24 +21,24 @@ let smartSimilarPosts = posts.filter(
   (p) => p.id !== post.id && p.data.categories?.some((cat) => categories?.includes(cat))
 );
 
-// 2. ⚡ SEO FALLBACK: සමාන කැටගරි නැත්නම්, සයිට් එකේ තියෙන වෙනත් ඕනෑම පෝස්ට් ඔටෝ අරන් පෙන්වීම
+// 2. ⚡ SEO FALLBACK: සමාන කැටගරි නැත්නම්, සයිට් එකේ තියෙන වෙනත් ඕනෑම පෝස්ට් ඔටෝ අරන් පෙන්වීම (හිස්ව තැබීම SEO වලට අහිතකරයි)
 if (!smartSimilarPosts || smartSimilarPosts.length === 0) {
   smartSimilarPosts = posts.filter((p) => p.id !== post.id);
 }
 
-// 3. FIX: කෙළින් අතට (2:3) ලස්සනට පේළියට වාඩි වෙන්න පෝස්ට් ප්‍රමාණය 6ක් දක්වා වැඩි කළා
+// 3. FIX: උඹ ඉල්ලපු විදිහටම කෙළින් අතට (2:3) ලස්සනට පේළියට වාඩි වෙන්න පෝස්ට් ප්‍රමාණය 6ක් දක්වා වැඩි කළා
 const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
 ---
 
-<section class="section">
+<section class="section bg-[#010203]">
   <div class="container">
     <article class="row justify-center">
+      {/* POST TITLE: ප්‍රධාන මාතෘකාව #F8F8FF වලින් උපරිම සුදු කර ඉස්මතු කළා */}
       <div class="md:col-10 text-center">
-        {/* ⚡ MAXIMUM PURE WHITE MAIN TITLE */}
-        <h1 set:html={markdownify(title)} class="h2 text-white font-black" />
+        <h1 set:html={markdownify(title)} class="h2 text-[#F8F8FF] font-black drop-shadow-md" />
         
-        {/* ⚡ METADATA ROW FIX: අයිකන සහ ලින්ක්ස් සියල්ල පට්ට සුදු පාට කළා */}
-        <ul class="mt-4 flex flex-wrap items-center justify-center text-white font-bold">
+        {/* META INFO ROW: මෙටා ඩේටා සහ අයිකන කළු පසුබිමට කැපී පෙනෙන සේ සැකසීම */}
+        <ul class="mt-4 flex flex-wrap items-center justify-center text-[#F8F8FF]/90">
           <li class="mx-3">
             {
               allAuthors
@@ -50,7 +50,7 @@ const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
                 .map((author) => (
                   <a
                     href={`/authors/${slugify(author.id)}`}
-                    class="flex items-center hover:text-primary font-bold text-white"
+                    class="flex items-center hover:text-primary font-bold text-[#F8F8FF]"
                   >
                     {author.data.image && (
                       <Image
@@ -58,20 +58,20 @@ const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
                         alt={author.data.title}
                         height={50}
                         width={50}
-                        class="mr-2 h-6 w-6 rounded-full"
+                        class="mr-2 h-6 w-6 rounded-full border border-white/20"
                       />
                     )}
-                    <span class="text-white">{author.data.title}</span>
+                    <span>{author.data.title}</span>
                   </a>
                 ))
             }
           </li>
-          <li class="mx-3 flex items-center flex-wrap font-bold text-white">
-            <BiCalendarEdit className="mr-1 h-5 w-5 text-white" />
+          <li class="mx-3 flex items-center flex-wrap font-semibold text-[#F8F8FF]">
+            <BiCalendarEdit className="mr-1 h-5 w-5 text-[#01AD9F]" />
             {dateFormat(date)}
           </li>
-          <li class="mx-3 flex items-center flex-wrap text-white">
-            <BiCategoryAlt className="mr-1 h-[18px] w-[18px] text-white" />
+          <li class="mx-3 flex items-center flex-wrap">
+            <BiCategoryAlt className="mr-1 h-[18px] w-[18px] text-[#01AD9F]" />
 
             <ul>
               {
@@ -79,7 +79,7 @@ const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
                   <li class="inline-block">
                     <a
                       href={`/categories/${slugify(category)}`}
-                      class="mr-2 hover:text-primary font-bold text-white"
+                      class="mr-2 hover:text-primary font-bold bg-white/10 px-2 py-0.5 rounded text-[#F8F8FF]"
                     >
                       {humanize(category)}
                       {i !== categories.length - 1 && ","}
@@ -108,22 +108,22 @@ const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
       </div>
 
       <div class="md:col-10">
-        {/* 👑 MAXIMUM PROSE CONTENT FIX: 
-            ලිපිය ඇතුළත තියෙන සියලුම Markdown/HTML අකුරු (p, h1, h2, h3, li, strong) 
-            කලු පසුබිම උඩ පට්ටම සුදු පාටින් දිලිසෙන්න 'prose-invert text-white' සහ custom css එකතු කළා */}
-        <div class="content mb-16 text-left text-white prose prose-invert max-w-full post-body-content">
+        {/* 👑 ULTIMATE POST CONTENT TYPOGRAPHY FIX: 
+            පෝස්ට් එක ඇතුළේ Markdown වලින් ජෙනරේට් වෙන සියලුම අකුරු, පේළි, ලිස්ට්, බ්ලොක්කෝට්ස්, 
+            මාතෘකා සියල්ල කළු පසුබිම මත උපරිමයෙන්ම පෙනීමට #F8F8FF සහ Tailwind custom css යෙදුවා */}
+        <div class="content mb-16 text-left text-[#F8F8FF] custom-post-content">
           <Content />
         </div>
         
-        <div class="flex flex-wrap items-center justify-between">
+        {/* TAGS BLOCK: කළු පසුබිමට නොපෙනී යන ලා පාටවල් වෙනුවට තද පැහැති ටැග් බොක්ස් සකස් කිරීම */}
+        <div class="flex flex-wrap items-center justify-between border-t border-white/10 pt-6">
           <ul class="mr-4 mb-4 space-x-3">
             {
               tags.map((tag: string) => (
-                <li class="inline-block mb-2">
-                  {/* ⚡ MAXIMUM DARK TAGS WITH PURE WHITE TEXT */}
+                <li class="inline-block">
                   <a
                     href={`/tags/${slugify(tag)}`}
-                    class="block rounded-lg bg-[#010203] border border-white/40 px-4 py-2 font-black text-white text-sm hover:border-white hover:text-primary transition duration-300"
+                    class="block rounded-lg bg-white/5 border border-white/10 px-4 py-2 font-black text-[#F8F8FF] text-sm hover:bg-[#01AD9F] hover:text-white transition duration-300"
                   >
                     #{humanize(tag)}
                   </a>
@@ -132,7 +132,7 @@ const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
             }
           </ul>
           <Share
-            className="social-share mb-4 text-white"
+            className="social-share mb-4 text-[#F8F8FF]"
             title={title}
             description={description}
             slug={post.id}
@@ -143,12 +143,15 @@ const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
   </div>
 </section>
 
+{/* 👑 SUGGESTED STORIES BLOCK:
+    Rich Black පසුබිම මත පෝස්ට් 6 කොටස ඉතාමත් දර්ශනීය ලෙස කැපී පෙනීමට 
+    #010203 ➔ Gold ➔ #010203 3-Way Smooth Gradient එකක් යෙදුවා. */}
 {
   finalSimilarPosts.length > 0 && (
-    <section class="section pt-0">
+    <section class="section pt-12 pb-16 bg-gradient-to-b from-[#010203] via-[#D4AF37]/15 to-[#010203] border-t border-white/5">
       <div class="container">
-        {/* ⚡ SUGGESTED TITLE MAXIMUM PURE WHITE FIX */}
-        <h2 class="mb-8 font-black text-left h4 border-l-4 border-primary pl-3 text-white">
+        {/* ටයිටල් එක තද සුදු කර, වම්පස බෝඩර් එක ප්‍රාථමික පාටින් ඉස්මතු කළා */}
+        <h2 class="mb-8 font-black text-left h4 border-l-4 border-[#01AD9F] pl-3 text-[#F8F8FF]">
           ඔබ කැමති විය හැකි තවත් කතා (Suggested Stories)
         </h2>
         
@@ -160,18 +163,20 @@ const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
   )
 }
 
-{/* ⚡ INLINE INJECT FORCED CSS: 
-    Tailwind මඟින් සමහරවිට Override නොවන Markdown අකුරු (p, span, li) සියල්ල බලහත්කාරයෙන්ම More Maximum White කිරීමට */}
+{/* ⚡ SCOPED CSS FOR ADVANCED TYPOGRAPHY COMPATIBILITY:
+    Markdown මඟින් එන ඕනෑම ඡේදයක් හෝ Span එකක් නිතැතින්ම #F8F8FF වන බව සනාථ කිරීමේ SEO ආරක්ෂක පියවරක් */}
 <style is:global>
-  .post-body-content p, 
-  .post-body-content span, 
-  .post-body-content li, 
-  .post-body-content strong,
-  .post-body-content h1,
-  .post-body-content h2,
-  .post-body-content h3,
-  .post-body-content h4 {
-    color: #ffffff !important;
-    font-weight: 600 !important; /* කියවීම පහසු කිරීමට අකුරු දශමයක් මහත කළා */
+  .custom-post-content p, 
+  .custom-post-content span, 
+  .custom-post-content li,
+  .custom-post-content strong,
+  .custom-post-content h1,
+  .custom-post-content h2,
+  .custom-post-content h3,
+  .custom-post-content h4 {
+    color: #F8F8FF !important;
+  }
+  .custom-post-content blockquote p {
+    color: #F8F8FF/80 !important;
   }
 </style>

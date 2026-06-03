@@ -15,11 +15,12 @@ const { posts } = Astro.props;
   {
     posts.map((post) => (
       /* 🎯 UI & SEO GRID FIX: මොබයිල්, ටැබ්, ඩෙස්ක්ටොප් හැම එකකදීම එක පේළියට පෝස්ට් 3 බැගින් පේළි දෙකකට පෝස්ට් 6ක් හැඩගැස්වීම */
-      <div class="col-4 flex flex-col justify-between group mb-4">
+      <div class="col-4 flex flex-col justify-between group mb-4 text-center"> {/* ⚡ FIXED: මුළු කාඩ් එකම මැදට කිරීමට text-center යෙදුවා */}
         {post.data.image && (
           <a
             href={`/blog/${post.id}/`} /* ⚠️ FIXED: නිවැරදි Astro Content Layer URL එක දුන්නා */
-            class="rounded-lg block hover:text-primary overflow-hidden group relative bg-gray-900"
+            /* 👑 PREMIUM GOLDEN FRAME BAR: පින්තූරය වටා රන්වන් පැහැති සියුම් බෝඩර් එකක් සහ hover වීමේදී රන්වන් පැහැයෙන් බැබළෙන Shadow එකක් එක් කළා */
+            class="rounded-lg block overflow-hidden group relative bg-gray-900 border-2 border-[#D4AF37]/60 hover:border-[#FFD700] transition-all duration-300 hover:shadow-[0_0_15px_rgba(212,175,55,0.5)]"
             style="aspect-ratio: 2 / 3;" /* ⚡ හෝම් පේජ් එකේ වගේම ලස්සන කෙළින් අතට 2:3 Ratio එක දුන්නා */
           >
             <Image
@@ -34,8 +35,8 @@ const { posts } = Astro.props;
           </a>
         )}
         
-        {/* INFO ROW: මොබයිල් තිර වලට ගැළපෙන සේ මෙටා ඩේටා අකුරු ලස්සනට කුඩා කළා */}
-        <ul class="mt-2 mb-1 flex flex-wrap items-center text-text text-[10px] sm:text-xs justify-between">
+        {/* INFO ROW: මැදට පෙළගස්වා මොබයිල් තිර වලට ගැළපෙන සේ මෙටා ඩේටා අකුරු ලස්සනට කුඩා කළා */}
+        <ul class="mt-2 mb-1 flex flex-wrap items-center text-text text-[10px] sm:text-xs justify-center gap-x-2"> {/* ⚡ FIXED: justify-center මඟින් මැදට ගන්නා ලදී */}
           <li class="flex items-center flex-wrap">
             <BiCategoryAlt className="mr-0.5 h-3 w-3 sm:h-[14px] sm:w-[14px] text-gray-600" />
             <ul>
@@ -57,11 +58,11 @@ const { posts } = Astro.props;
           </li>
         </ul>
 
-        {/* POST TITLE: line-clamp-2 දමා මාතෘකාව පේළි දෙකකට සීමා කර Grid එක එක සමානව තැබීම */}
-        <h3 class="mb-1 line-clamp-2 leading-tight">
+        {/* POST TITLE: ⚡ FIXED: text-center සහ mx-auto මඟින් මාතෘකාවේ දෙවැනි පේළිය පවා හරි මැදටම සකස් කරන ලදී */}
+        <h3 class="mb-1 line-clamp-2 leading-tight text-center mx-auto w-full">
           <a
             href={`/blog/${post.id}/`}
-            class="block hover:text-primary transition duration-300 text-[11px] sm:text-base font-bold text-dark dark:text-darkmode-text"
+            class="block hover:text-primary transition duration-300 text-[11px] sm:text-base font-bold text-dark dark:text-darkmode-text text-center"
           >
             {post.data.title}
           </a>

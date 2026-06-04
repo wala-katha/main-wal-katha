@@ -1,62 +1,117 @@
 ---
-const { source, className } = Astro.props;
-import DynamicIcon from "@/helpers/DynamicIcon";
+import { getSinglePage } from "@/lib/contentParser.astro";
+import dateFormat from "@/lib/utils/dateFormat";
+import { humanize, slugify } from "@/lib/utils/textConverter";
+import { Image } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
+import { BiCalendarEdit, BiCategoryAlt } from "react-icons/bi";
 
-export interface ISocial {
-  name: string;
-  icon: string;
-  link: string;
-}
-
-// Map frontmatter keys to react-icons names used by DynamicIcon
-const iconMap: Record<string, string> = {
-  facebook: "FaFacebook",
-  x: "FaXTwitter",
-  instagram: "FaInstagram",
-  linkedin: "FaLinkedin",
-  youtube: "FaYoutube",
+type Props = {
+  posts: CollectionEntry<"posts">[];
 };
-
-const normalize = (src: any): ISocial[] => {
-  if (!src) return [];
-  if (Array.isArray(src)) return src as ISocial[];
-  if (typeof src === "object" && src !== null) {
-    return Object.entries(src).map(([name, link]) => ({
-      name,
-      link: String(link),
-      icon:
-        iconMap[String(name).toLowerCase()] ||
-        `Fa${String(name).charAt(0).toUpperCase()}${String(name).slice(1)}`,
-    }));
-  }
-  return [];
-};
-
-const items = normalize(source);
+const { posts } = Astro.props;
 ---
 
-{/* 👑 PREMIUM DARK SOCIAL ICONS LIST: 
-    අයිකන එක ළඟ ගොඩ ගැසෙන්නේ නැතිව ලස්සනට පිරිසිදුව පෙනීමට flex සහ gap-4 පාවිච්චි කළා */}
-<ul class={`flex flex-wrap items-center gap-4 select-none ${className}`}>
-  {
-    items.map((social: ISocial) => (
-      <li class="inline-block">
-        <a
-          aria-label={social.name}
-          href={social.link}
-          target="_blank"
-          rel="noopener noreferrer nofollow"
-          /* 🎯 UI & SEO FIXES FOR BLACK THEME:
-             - බොත්තම වටා සියුම් වටකුරු හැඩයක් (rounded-xl) සහ පසුබිමක් (bg-white/5) දුන්නා.
-             - සාමාන්‍ය වෙලාවට අයිකන මෘදු සුදු (text-white/80) පැහැයෙන් දිස්වේ.
-             - Hover කළ විට සයිට් එකේ තීම් කලර් එක වන #01AD9F (Teal) පැහැයට හැරී සියුම් Glow එකක් (shadow) ලබා දේ.
-             - Touch Target එක h-10 w-10 ලෙස මොබයිල් ෆ්‍රෙන්ඩ්ලි කළා. */
-          class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white/80 transition duration-300 hover:text-white hover:border-[#01AD9F] hover:bg-[#01AD9F] hover:shadow-[0_0_12px_rgba(1,173,159,0.5)] text-xl"
-        >
-          <span class="sr-only">{social.name}</span>
-          <DynamicIcon className="inline-block" icon={social.icon} />
-        </a>
-      </li>
-    ))
+{/* 👑 ULTIMATE RICH BLACK & GOLD GRADIENT BACKGROUND:
+    හෝම් පේජ් එකේ පසුබිම Rich Black නිසා, මුලින් #010203 පසුබිමෙන් පටන් ගෙන, මැදදී ලස්සනට දිලිසෙන රත්තරන් පාටක් (#D4AF37) වී, 
+    පහළදී නැවතත් Rich Black පසුබිමටම මුසුවන ලෙස Gradient එක හැඩගැස්වීම */}
+<div class="w-full bg-gradient-to-b from-[#010203] via-[#D4AF37]/15 to-[#010203] p-4 sm:p-6 rounded-2xl transition-all duration-300 mb-8 border border-white/5 shadow-lg">
+  
+  <div class="row gy- gy-4 gx-2 sm:gx-4 justify-center">
+    {
+      posts.map((post) => (
+        /* 🎯 UI & SEO GRID FIX: මොබයිල්, ටැබ්, ඩෙස්ක්ටොප් හැම එකකදීම එක පේළියට පෝස්ට් 3 බැගින් පේළි දෙකකට පෝස්ට් 6ක් හැඩගැස්වීම */
+        <div class="col-4 flex flex-col justify-between group mb-4 text-center">
+          {post.data.image && (
+            <a
+              href={`/blog/${post.id}/`} /* ⚠️ FIXED: නිවැරදි Astro Content Layer URL එක */
+              class="rounded-lg block overflow-hidden group relative bg-[#010203] mx-auto w-full post-card-frame border border-white/10"
+              style="aspect-ratio: 3 / 4;" /* ⚡ FIX: උස දශමයක් අඩු කර කාඩ් එක වඩාත් පිළිවෙළ කිරීමට Ratio එක 3:4 කළා */
+            >
+              {/* 👑 RUNNING WHITE LINE ANIMATION CONTAINER (Same as Posts):
+                  පින්තූරය වටා සුදු පැහැති සියුම් ඉරක් (White Laser Light) නොනවත්වා කොටුව වටේට දුවන ක්‍රියාකාරීත්වය */}
+              <div class="absolute inset-0 border border-white/20 rounded-lg pointer-events-none z-10 overflow-hidden">
+                <div class="animated-laser-line"></div>
+              </div>
+
+              <Image
+                /* 👑 IMAGE STYLING: පින්තූරය වටා මූලික සුදු බෝඩර් එකක් සහ හොවර් එකේදී ලස්සන Glow එකක් ලැබෙන සේ සැකසීම */
+                class="w-full h-full object-contain rounded-lg border border-white/40 group-hover:border-white transition-all duration-300 shadow-[0_0_1px_rgba(0,0,0,0)] group-hover:shadow-[0_0_15px_rgba(255,255,255,0.6)] relative z-0"
+                src={post.data.image}
+                alt={post.data.title}
+                width={500}
+                height={666} /* ⚡ Ratio එකට ගැළපෙන සේ උස ප්‍රමාණය නූලටම වෙනස් කළා */
+                loading="eager" /* Featured කොටස නිසා ඉක්මනින් ලෝඩ් වීම සඳහා eager */
+                decoding="async"
+              />
+            </a>
+          )}
+          
+          {/* INFO ROW: කළු පසුබිමට කැපී පෙනෙන සේ මෙටා ඩේටා සහ අයිකන පිරිසිදු සුදු පැහැයට හැරවීම */}
+          <ul class="mt-2 mb-1 flex flex-wrap items-center text-[#F8F8FF]/90 text-[10px] sm:text-xs justify-center gap-x-2">
+            <li class="flex items-center flex-wrap">
+              <BiCategoryAlt className="mr-0.5 h-3 w-3 sm:h-[14px] sm:w-[14px] text-[#01AD9F]" />
+              <ul>
+                {post.data.categories.slice(0, 1).map((category: string) => (
+                  <li class="inline-block">
+                    {/* 👑 CONTRAST FIX: 
+                        තද කහ පසුබිම උඩ පට්ටම පැහැදිලිව පෙනීමට ඇතුළත කැටගරි බොත්තම තද Rich Black (#010203) කර අකුරු සුදු කළා */}
+                    <a
+                      href={`/categories/${slugify(category)}/`}
+                      class="hover:bg-primary font-black text-[9px] sm:text-xs bg-[#FFCC00] px-2 py-1 rounded text-[#010203] transition duration-300"
+                    >
+                      {humanize(category)}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </li>
+            <li class="hidden xs:flex items-center flex-wrap font-bold text-[9px] sm:text-xs text-[#F8F8FF]/80">
+              <BiCalendarEdit className="mr-0.5 h-3 w-3 sm:h-4 sm:w-4 text-[#01AD9F]" />
+              {dateFormat(post.data.date!)}
+            </li>
+          </ul>
+
+          {/* POST TITLE: text-center සහ text-white මඟින් කළු පසුබිම මත පට්ටම පැහැදිලිව පෙනීමට සකස් කරන ලදී */}
+          <h3 class="mb-1 line-clamp-2 leading-tight text-center mx-auto w-full">
+            <a
+              href={`/blog/${post.id}/`}
+              class="block hover:text-primary transition duration-300 text-[11px] sm:text-base font-black text-white text-center drop-shadow-sm"
+            >
+              {post.data.title}
+            </a>
+          </h3>
+        </div>
+      ))
+    }
+  </div>
+
+</div>
+
+{/* ⚡ SCOPED CSS FOR THE RUNNING LASER ANIMATION: 
+    වෙනත් ෆයිල්ස් වලට බලපෑමක් නොකර, මෙම කොටසට පමණක් අතිශය සුමටව සුදු ඉර දුවන ලේසර් ඉෆෙක්ට් එක සක්‍රීය කිරීම */}
+<style>
+  .post-card-frame {
+    position: relative;
   }
-</ul>
+  .animated-laser-line {
+    position: absolute;
+    width: 150%;
+    height: 150%;
+    background: conic-gradient(from 0deg, transparent 70%, #ffffff 90%, transparent 100%);
+    top: -25%;
+    left: -25%;
+    animation: rotateLaser 3s linear infinite;
+    z-index: 5;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+  @keyframes rotateLaser {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+</style>

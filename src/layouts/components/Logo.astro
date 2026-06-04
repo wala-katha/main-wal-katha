@@ -15,26 +15,46 @@ const {
   logo_text: string;
   title: string;
 } = config.site;
+
+// 🎯 SMART TEXT HIGHLIGHT LOGIC: ලෝගෝ ටෙක්ස්ට් එකේ මුල් වචනය සහ ඉතිරි වචන වෙන් කර හඳුනා ගැනීම (ලස්සනට ඉස්මතු කිරීමට)
+const currentLogoText = logo_text ? logo_text : title;
+const textWords = currentLogoText.split(" ");
+const firstWord = textWords[0];
+const remainingText = textWords.slice(1).join(" ");
 ---
 
-<a href="/" class="navbar-brand block" itemprop="url">
-  {
-    src || logo ? (
-      <Image
-        width={logo_width.replace("px", "") * 2}
-        height={logo_height.replace("px", "") * 2}
-        src={src ? src : logo}
-        alt={title}
-        itemprop="logo"
-        loading="eager" fetchpriority="high" style={{
-          height: logo_height.replace("px", "") + "px",
-          width: logo_width.replace("px", "") + "px",
-        }}
-      />
-    ) : logo_text ? (
-      <span itemprop="name" class="font-bold">{logo_text}</span>
-    ) : (
-      <span itemprop="name" class="font-bold">{title}</span>
-    )
-  }
-</a>
+{/* 👑 SEO STRUCTURED DATA WRAPPER: 
+    Google සෙවුම් යන්ත්‍ර වලට මේක සයිට් එකේ ප්‍රධාන සංවිධානාත්මක ලෝගෝ එක බව 100%ක්ම තහවුරු කිරීමට 
+    Organization Schema එක ඇතුළත් කළා. */}
+<div itemscope itemtype="https://schema.org/Organization" class="inline-block">
+  <a href="/" class="navbar-brand block transition-all duration-300 hover:opacity-90" itemprop="url">
+    {
+      src || logo ? (
+        /* 📸 IMAGE LOGIC: ලෝගෝ එක පින්තූරයක් නම් එය 100% පැහැදිලිව, වේගයෙන් ලෝඩ් වීම තහවුරු කිරීම */
+        <Image
+          width={logo_width.replace("px", "") * 2}
+          height={logo_height.replace("px", "") * 2}
+          src={src ? src : logo}
+          alt={title}
+          itemprop="logo"
+          loading="eager" 
+          fetchpriority="high" 
+          style={{
+            height: logo_height.replace("px", "") + "px",
+            width: logo_width.replace("px", "") + "px",
+          }}
+        />
+      ) : (
+        /* 👑 PREMIUM TEXT LOGIC: ලෝගෝ එක අකුරු වලින් තියෙනවා නම්, කළු පසුබිම මත පිස්සු හැදෙන සුපිරි නිශ්චල ලුක් එකක් දීම */
+        <span 
+          itemprop="name" 
+          class="text-xl sm:text-2xl font-black tracking-tight drop-shadow-md select-none text-[#F8F8FF]"
+        >
+          {/* මුල් වචනය සයිට් එකේ තීම් වර්ණය වන #01AD9F (Teal) වලින් හැඩගැස්වීම */}
+          <span class="text-[#01AD9F]">{firstWord}</span>
+          {remainingText ? ` ${remainingText}` : ''}
+        </span>
+      )
+    }
+  </a>
+</div>

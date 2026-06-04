@@ -35,15 +35,23 @@ const normalize = (src: any): ISocial[] => {
 const items = normalize(source);
 ---
 
-<ul class={className}>
+{/* 👑 PREMIUM DARK SOCIAL ICONS LIST: 
+    අයිකන එක ළඟ ගොඩ ගැසෙන්නේ නැතිව ලස්සනට පිරිසිදුව පෙනීමට flex සහ gap-4 පාවිච්චි කළා */}
+<ul class={`flex flex-wrap items-center gap-4 select-none ${className}`}>
   {
     items.map((social: ISocial) => (
-      <li>
+      <li class="inline-block">
         <a
           aria-label={social.name}
           href={social.link}
           target="_blank"
           rel="noopener noreferrer nofollow"
+          /* 🎯 UI & SEO FIXES FOR BLACK THEME:
+             - බොත්තම වටා සියුම් වටකුරු හැඩයක් (rounded-xl) සහ පසුබිමක් (bg-white/5) දුන්නා.
+             - සාමාන්‍ය වෙලාවට අයිකන මෘදු සුදු (text-white/80) පැහැයෙන් දිස්වේ.
+             - Hover කළ විට සයිට් එකේ තීම් කලර් එක වන #01AD9F (Teal) පැහැයට හැරී සියුම් Glow එකක් (shadow) ලබා දේ.
+             - Touch Target එක h-10 w-10 ලෙස මොබයිල් ෆ්‍රෙන්ඩ්ලි කළා. */
+          class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white/80 transition duration-300 hover:text-white hover:border-[#01AD9F] hover:bg-[#01AD9F] hover:shadow-[0_0_12px_rgba(1,173,159,0.5)] text-xl"
         >
           <span class="sr-only">{social.name}</span>
           <DynamicIcon className="inline-block" icon={social.icon} />

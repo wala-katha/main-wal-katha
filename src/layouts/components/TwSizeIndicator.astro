@@ -1,9 +1,16 @@
 ---
+// 👑 SEO & PRODUCTION GUARD: 
+// Astro වල සයිට් එක Production (Live Build) එකක් විදිහට Build වෙද්දී මේ කම්පෝනන්ට් එක Google Bot එකට හෝ 
+// සාමාන්‍ය පරිශීලකයන්ට කිසිසේත්ම ලෝඩ් නොවීම 100% ක්ම තහවුරු කිරීමට `import.meta.env.DEV` පාවිච්චි කළා.
+const isDev = import.meta.env.DEV;
 ---
 
 {
-  process.env.NODE_ENV === "development" && (
-    <div class="fixed top-0 left-0 z-50 flex w-[30px] items-center justify-center bg-gray-200 py-[2.5px] text-[12px] uppercase text-black sm:bg-red-200 md:bg-yellow-200 lg:bg-green-200 xl:bg-blue-200 2xl:bg-pink-200">
+  isDev && (
+    /* 👑 PREMIUM CYBERPUNK DARK INDICATOR: 
+       සයිට් එකේ ප්‍රිමියම් කළු පසුබිමට ගැළපෙන සේ බොක්ස් එක පිරිසිදු තද කළු (`bg-[#010203]/90`) කර, වටේට සියුම් බෝඩරයක් දමා, 
+       Screen සයිස් එක අනුව අකුරු වල වර්ණය පට්ටම ලස්සන Neon Glow වර්ණ වලට ඔටෝමැටිකව මාරු වන සේ සැකසුවා. */
+    <div class="fixed top-2 left-2 z-50 flex h-7 w-12 items-center justify-center rounded-md border border-white/10 bg-[#010203]/90 font-black text-[11px] uppercase tracking-wider backdrop-blur-sm shadow-lg text-white sm:text-[#FF3366] md:text-[#FFCC00] lg:text-[#01AD9F] xl:text-[#3399FF] 2xl:text-[#B800FF]">
       <span class="block sm:hidden">all</span>
       <span class="hidden sm:block md:hidden">sm</span>
       <span class="hidden md:block lg:hidden">md</span>

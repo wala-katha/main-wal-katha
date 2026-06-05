@@ -29,12 +29,11 @@ const { main }: { main: NavigationLink[] } = menu;
     {/* MOBILE MENU TOGGLE CHECKBOX */}
     <input id="nav-toggle" type="checkbox" class="hidden" />
 
-    {/* MOBILE MENU BUTTONS */}
-    {/* 🎯 FIX: md:hidden ඉවත් කර Desktop එකේදීත් 100% මොබයිල් එකට සමානව බොත්තම් දෘශ්‍යමාන කළා */}
+    {/* MOBILE MENU BUTTONS (🎯 FIX: Desktop වලදීත් සර්වසමව පෙන්වීමට md:hidden සහ අනෙක් බ්ලොක්ස් ඉවත් කළා) */}
     <label
       id="show-button"
       for="nav-toggle"
-      class="order-2 flex cursor-pointer items-center text-white/90 hover:text-[#01AD9F] transition-colors duration-200 md:order-1 p-2"
+      class="order-2 flex cursor-pointer items-center text-white/90 hover:text-[#01AD9F] transition-colors duration-200 p-2"
     >
       <svg class="h-6 w-6 fill-current" viewBox="0 0 20 20">
         <title>Menu Open</title>
@@ -45,7 +44,7 @@ const { main }: { main: NavigationLink[] } = menu;
     <label
       id="hide-button"
       for="nav-toggle"
-      class="order-2 hidden cursor-pointer items-center text-white/90 hover:text-[#01AD9F] transition-colors duration-200 md:order-1 p-2"
+      class="order-2 hidden cursor-pointer items-center text-white/90 hover:text-[#01AD9F] transition-colors duration-200 p-2"
     >
       <svg class="h-6 w-6 fill-current" viewBox="0 0 20 20">
         <title>Menu Close</title>
@@ -55,8 +54,7 @@ const { main }: { main: NavigationLink[] } = menu;
       </svg>
     </label>
 
-    {/* NAVIGATION MENU */}
-    {/* 🎯 FIX: md:flex සහ md:w-auto ඉවත් කර, Desktop එකේදීත් මෙනු එක මොබයිල් එකට 100%ක්ම සමාන කළා */}
+    {/* NAVIGATION MENU (🎯 FIX: Desktop වල තිරස්ව ඇදෙන md:flex සහ md:w-auto ඉවත් කර 100% මොබයිල් විදිහටම සකස් කළා) */}
     <ul
       id="nav-menu"
       class="navbar-nav order-3 hidden w-full text-center gap-1"
@@ -77,11 +75,10 @@ const { main }: { main: NavigationLink[] } = menu;
                   </svg>
                 </button>
                 
-                {/* 👑 SILVER ANIMATED BORDER DROPDOWN BOX */}
-                {/* 🎯 FIX: md:absolute ඉවත් කර, Desktop එකේදීත් මොබයිල් එකේ මෙන් relative ලෙස ඇතුළතින්ම විවෘත වන සේ හැදුවා */}
+                {/* 👑 SILVER ANIMATED BORDER DROPDOWN BOX (රිදී පාටින් ඉරක් දුවන කොටුව) */}
                 <div 
                   id={`dropdown-${index}`} 
-                  class="nav-dropdown-list silver-animated-border hidden top-full min-w-[220px] rounded-xl z-50 text-center mx-auto my-2"
+                  class="nav-dropdown-list silver-animated-border hidden min-w-[220px] rounded-xl z-50 text-center mx-auto my-2"
                 >
                   <ul class="inner-dropdown bg-[#0c0d10] rounded-xl p-2 w-full h-full relative z-10">
                     {menu.children?.map((child) => (
@@ -113,7 +110,7 @@ const { main }: { main: NavigationLink[] } = menu;
     </ul>
 
     {/* SEARCH ICON BUTTON */}
-    <div class="order-1 ml-auto flex md:order-2 md:ml-0">
+    <div class="order-1 ml-auto flex md:ml-0">
       <a
         class="inline-block cursor-pointer p-2.5 text-xl text-white/80 transition-all duration-300 hover:text-[#01AD9F] hover:scale-110 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.05]"
         href="/search"
@@ -131,6 +128,24 @@ const { main }: { main: NavigationLink[] } = menu;
     font-family: inherit;
   }
 
+  {/* 🎯 FIX: මොබයිල් වල වැඩ කරපු CSS මීඩියා ලොජික් එක (max-width: 767px) ඉවත් කර ඩෙස්ක්ටොප් එකටත් 100% එකම ලෙස ඇප්ලයි කළා */}
+  .navbar-nav {
+    background-color: #060709 !important;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  }
+  
+  .nav-dropdown-list {
+    position: relative !important;
+    left: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+    margin-top: 0.5rem !important;
+  }
+
   /* ==========================================================
      ✨ PREMIUM TWO-WAY SILVER LAVA FLOW BORDER ANIMATION
      ========================================================== */
@@ -142,7 +157,7 @@ const { main }: { main: NavigationLink[] } = menu;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 255, 255, 0.03);
   }
 
-  /* 🎯 දෙපැත්තෙන්ම සමානව ගලාගෙන යන රිදී ද්‍රව ධාරාව */
+  /* දෙපැත්තෙන්ම සමානව ගලාගෙන යන රිදී ද්‍රව ධාරාව */
   .silver-animated-border::before {
     content: '';
     position: absolute;
@@ -173,23 +188,6 @@ const { main }: { main: NavigationLink[] } = menu;
     100% {
       transform: rotate(360deg) scale(1);
     }
-  }
-
-  /* 🎯 FIX: @media (max-width: 767px) ඉවත් කර ස්ටයිල්ස් සියල්ල Desktop එකටත් 100% පොදුවේ ක්‍රියාත්මක කළා */
-  .navbar-nav {
-    background-color: #060709 !important;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 1rem;
-    padding: 1rem;
-    margin-top: 1rem;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-  }
-  .nav-dropdown-list {
-    position: relative !important;
-    left: 0 !important;
-    transform: none !important;
-    width: 100% !important;
-    margin-top: 0.5rem !important;
   }
 </style>
 
@@ -252,7 +250,6 @@ const { main }: { main: NavigationLink[] } = menu;
         // 2. මොබයිල් මෙනු එක ඇරලා තිබ්බොත් ඒකත් ඔටෝ වැසීම (Checkbox uncheck කිරීම)
         if (navToggle && navToggle.checked) {
           navToggle.checked = false;
-          // Astro templates වල තියෙන custom toggle event එකක් තිබේ නම් එය trigger කිරීම
           const changeEvent = new Event('change');
           navToggle.dispatchEvent(changeEvent);
         }

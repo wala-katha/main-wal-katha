@@ -18,9 +18,14 @@ export interface NavigationLink {
 const { main }: { main: NavigationLink[] } = menu;
 ---
 
-{/* 👑 PREMIUM GLOSSY GLASSMORPHISM HEADER */}
-<header class="header sticky top-0 z-50 py-4 transition-all duration-300 border-b border-white/[0.06] bg-[#010203]/80 backdrop-blur-md shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
-  <nav class="navbar container flex items-center justify-between">
+{/* 👑 PREMIUM GLOSSY GLASSMORPHISM HEADER WITH ANIMATED SILVER BORDER */}
+<header class="header sticky top-0 z-50 py-4 transition-all duration-300 bg-[#010203]/80 backdrop-blur-md shadow-[0_4px_30px_rgba(0,0,0,0.8)] overflow-hidden unique-silver-border-wrapper">
+  
+  {/* ✨ SILVER ANIMATED LINE EFFECT (රිදී පාටින් වටේටම කැරකෙන ලයිට් ඉරි කෑලි දෙක) */}
+  <div class="silver-border-line top-line"></div>
+  <div class="silver-border-line bottom-line"></div>
+
+  <nav class="navbar container flex items-center justify-between relative z-10">
     {/* LOGO */}
     <div class="order-0">
       <Logo />
@@ -29,7 +34,7 @@ const { main }: { main: NavigationLink[] } = menu;
     {/* MOBILE MENU TOGGLE CHECKBOX */}
     <input id="nav-toggle" type="checkbox" class="hidden" />
 
-    {/* 🎯 FIX: CONTRAST FOR MOBILE BUTTONS (text-black වෙනුවට text-white/90 දීලා කැපී පෙනෙන්න හැදුවා) */}
+    {/* CONTRAST FOR MOBILE BUTTONS */}
     <label
       id="show-button"
       for="nav-toggle"
@@ -75,7 +80,7 @@ const { main }: { main: NavigationLink[] } = menu;
                   </svg>
                 </button>
                 
-                {/* 👑 PREMIUM DARK DROPDOWN BOX (bg-white අයින් කර වීදුරු ලුක් එකක් දුන්නා) */}
+                {/* PREMIUM DARK DROPDOWN BOX */}
                 <ul 
                   id={`dropdown-${index}`} 
                   class="nav-dropdown-list hidden md:absolute left-1/2 md:-translate-x-1/2 top-full min-w-[220px] rounded-xl border border-white/[0.08] bg-[#0c0d10]/95 backdrop-blur-lg p-2 shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-50 text-center mx-auto my-2 md:my-0"
@@ -110,7 +115,6 @@ const { main }: { main: NavigationLink[] } = menu;
     {/* SEARCH ICON BUTTON */}
     <div class="order-1 ml-auto flex md:order-2 md:ml-0">
       <a
-        /* 🎯 FIX: text-dark වෙනුවට text-white/80 කරලා හොවර් එකේදී Teal වර්ණයෙන් දිලිසෙන්න හැදුවා */
         class="inline-block cursor-pointer p-2.5 text-xl text-white/80 transition-all duration-300 hover:text-[#01AD9F] hover:scale-110 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.05]"
         href="/search"
         title="search"
@@ -123,12 +127,61 @@ const { main }: { main: NavigationLink[] } = menu;
 </header>
 
 <style is:global>
-  /* මෙනු ලින්ක්ස් වල ඇක්ටිව් හෝ හොවර් ස්ටයිල්ස් හරියාකාරව වැඩ කිරීමට */
   .nav-link {
     font-family: inherit;
   }
+
+  /* ==========================================================
+     👑 SILVER ANIMATED BORDER LIGHTS (කැරකෙන රිදී පාට ඉරි CSS)
+     ========================================================== */
+  .unique-silver-border-wrapper {
+    position: relative;
+  }
+
+  /* හෙඩර් එකේ යටින් ස්ථිරවම තියෙන සියුම් ඩාර්ක් බෝඩර් එක */
+  .unique-silver-border-wrapper::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+    z-index: 2;
+  }
+
+  .silver-border-line {
+    position: absolute;
+    height: 1.5px;
+    /* රිදී, සුදු සහ විනිවිද පෙනෙන වර්ණ එකතු කර සාදන ලද Glossy Silver Gradient එක */
+    background: linear-gradient(90deg, transparent, rgba(200, 200, 200, 0.2), #ffffff, rgba(200, 200, 200, 0.2), transparent);
+    width: 30%;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .top-line {
+    top: 0;
+    animation: moveTopSilver 6s linear infinite;
+  }
+
+  .bottom-line {
+    bottom: 0;
+    animation: moveBottomSilver 6s linear infinite;
+  }
+
+  /* රිදී ඉරි වමෙන් දකුණට සහ දකුණෙන් වමට ස්මාර්ට් ලෙස දුවන ඇනිමේෂන් */
+  @keyframes moveTopSilver {
+    0% { left: -30%; }
+    100% { left: 110%; }
+  }
+
+  @keyframes moveBottomSilver {
+    0% { right: -30%; }
+    100% { right: 110%; }
+  }
   
-  /* මොබයිල් වලදී මෙනු එක ලස්සනට පෙන්වීමට */
+  /* මොබයිල් සැකසුම් */
   @media (max-width: 767px) {
     .navbar-nav {
       background-color: #060709 !important;
@@ -151,12 +204,13 @@ const { main }: { main: NavigationLink[] } = menu;
 </style>
 
 <script>
-  function initDropdowns() {
-    // 🎯 FIX: QuerySelectorAll පාවිච්චි කරලා සයිට් එකේ ඩ්‍රොප්ඩවුන් කීයක් තිබ්බත් වැඩ කරන විදිහට හැදුවා
+  function initHeaderLogic() {
     const dropdownButtons = document.querySelectorAll(".nav-dropdown-btn");
+    const navToggle = document.getElementById("nav-toggle") as HTMLInputElement;
+    const headerWrapper = document.querySelector(".unique-silver-border-wrapper");
 
+    // 1. Dropdown Toggle ක්‍රියාවලිය
     dropdownButtons.forEach((btn) => {
-      // පරණ Listener ක්ලෝන් කරලා අයින් කිරීම (Astro Page Swapping වලදී බග් නොවෙන්න)
       const newBtn = btn.cloneNode(true) as HTMLButtonElement;
       btn.parentNode?.replaceChild(newBtn, btn);
 
@@ -168,7 +222,6 @@ const { main }: { main: NavigationLink[] } = menu;
         newBtn.addEventListener("click", (e) => {
           e.stopPropagation();
           
-          // වෙනත් ඇරිලා තියෙන ඩ්‍රොප්ඩවුන් වැසීම
           document.querySelectorAll(".nav-dropdown-list").forEach((m) => {
             if (m.id !== targetId) {
               m.classList.add("hidden");
@@ -191,17 +244,29 @@ const { main }: { main: NavigationLink[] } = menu;
       }
     });
 
-    // පිටත ක්ලික් කරපු ගමන් ඩ්‍රොප්ඩවුන් වැසීම
-    document.addEventListener("click", () => {
-      document.querySelectorAll(".nav-dropdown-list").forEach((menu) => {
-        menu.classList.add("hidden");
-        menu.previousElementSibling?.querySelector(".dropdown-icon")?.classList.remove("rotate-180");
-        menu.previousElementSibling?.setAttribute("aria-expanded", "false");
-      });
+    // 2. 🎯 CRUCIAL FIX: මෙනුවෙන් පිටත ඕනෑම තැනක ක්ලික් කළ විට ඔටෝ වැසීමේ ක්‍රියාවලිය
+    document.addEventListener("click", (event) => {
+      const target = event.target as Node;
+
+      // හෙඩර් එක ඇතුළේ සිදුවන ක්ලික් කිරීම් නොසලකා හැරීම, පිටත ක්ලික් කිරීම් පමණක් හසු කර ගැනීම
+      if (headerWrapper && !headerWrapper.contains(target)) {
+        
+        // අ) මොබයිල් මෙනු එක ඇරිලා තියෙනවා නම් ඒක වසා දැමීම (Checkbox uncheck කිරීම)
+        if (navToggle && navToggle.checked) {
+          navToggle.checked = false;
+        }
+
+        // ආ) ඇරිලා තියෙන සියලුම Dropdown මෙනු වසා දැමීම
+        document.querySelectorAll(".nav-dropdown-list").forEach((menu) => {
+          menu.classList.add("hidden");
+          menu.previousElementSibling?.querySelector(".dropdown-icon")?.classList.remove("rotate-180");
+          menu.previousElementSibling?.setAttribute("aria-expanded", "false");
+        });
+      }
     });
   }
 
-  // Astro ස්ක්‍රිප්ට් එක ලයිව් වෙද්දී රන් කිරීම
-  document.addEventListener("DOMContentLoaded", initDropdowns);
-  document.addEventListener("astro:page-load", initDropdowns);
+  // Astro සර්වර් සයිඩ් ලෝඩින් වලදී ක්‍රියාත්මක වීමට ජීවය දීම
+  document.addEventListener("DOMContentLoaded", initHeaderLogic);
+  document.addEventListener("astro:page-load", initHeaderLogic);
 </script>

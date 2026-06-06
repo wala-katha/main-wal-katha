@@ -24,7 +24,6 @@ if (!smartSimilarPosts.length) {
 const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
 
 // ✅ SAFE: Token frontend එකේ නැහැ — Worker side validate කරනවා
-// API_URL only (no secret exposed)
 const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
 ---
 
@@ -127,25 +126,24 @@ const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
   </div>
 
   {/* ================================================================
-    💬 FLOATING COMMENT BUTTON
+    💬 FLOATING COMMENT BUTTON — ANIMATED
   ================================================================ */}
   <button
     id="comment-floating-btn"
-    class="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-[#01AD9F] text-[#010203] font-black px-5 py-3 rounded-full shadow-[0_4px_20px_rgba(1,173,159,0.4)] hover:bg-[#01c4b4] hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer select-none"
+    class="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-[#01AD9F] text-[#010203] font-black px-5 py-3 rounded-full shadow-[0_4px_20px_rgba(1,173,159,0.4)] cursor-pointer select-none comment-float-btn"
     aria-label="Open Comments Section"
     aria-expanded="false"
     aria-controls="comment-popup-modal"
   >
-    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+    <span class="comment-btn-ring"></span>
+    <svg class="w-5 h-5 fill-current relative z-10" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
     </svg>
-    <span>කමෙන්ට්ස්</span>
+    <span class="relative z-10">කමෙන්ට්ස්</span>
   </button>
 
   {/* ================================================================
     💬 COMMENT POPUP MODAL
-    ✅ SEO: aria-label, role="dialog" correctly set
-    ✅ Token frontmatter එකේ නැහැ — data-post-id only
   ================================================================ */}
   <div
     id="comment-popup-modal"
@@ -157,7 +155,7 @@ const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
     data-api-url={WORKER_API}
   >
     <div class="relative w-full max-w-2xl bg-[#0c0d10] border border-white/10 rounded-2xl shadow-[0_10px_50px_rgba(0,0,0,0.8)] flex flex-col max-h-[85vh]">
-      
+
       {/* MODAL HEADER */}
       <div class="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
         <h3 id="comment-modal-title" class="text-lg font-black text-[#F8F8FF] flex items-center gap-2">
@@ -177,7 +175,7 @@ const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
 
       {/* COMMENT SCROLL AREA */}
       <div id="comments-wrapper-area" class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-        
+
         {/* SUBMIT FORM */}
         <div class="mb-4">
           <label for="cf-comment-text" class="block text-xs text-white/50 mb-2 font-semibold uppercase tracking-wider">
@@ -200,6 +198,9 @@ const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
           </div>
         </div>
 
+        {/* INLINE VALIDATION MESSAGE */}
+        <p id="cf-validation-msg" class="hidden text-xs font-semibold px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 mb-2"></p>
+
         {/* COMMENTS LIST */}
         <div class="border-t border-white/5 pt-4">
           <p class="text-xs text-white/40 tracking-wider uppercase mb-3 font-semibold">Recent Comments</p>
@@ -217,6 +218,20 @@ const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
 
       </div>
     </div>
+  </div>
+
+  {/* ================================================================
+    ✅ SUCCESS TOAST
+  ================================================================ */}
+  <div
+    id="comment-success-toast"
+    class="fixed bottom-24 right-6 z-50 flex items-center gap-3 bg-[#01AD9F] text-[#010203] font-bold px-5 py-3 rounded-2xl shadow-[0_4px_24px_rgba(1,173,159,0.5)] translate-y-4 opacity-0 pointer-events-none transition-all duration-300"
+    aria-live="polite"
+  >
+    <svg class="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+    </svg>
+    <span>ස්තූතියි! ඔබේ අදහස සාර්ථකව දැමුණා 🙏</span>
   </div>
 </section>
 
@@ -251,6 +266,37 @@ const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
     background: rgba(255,255,255,0.1);
     border-radius: 99px;
   }
+
+  /* 💬 FLOATING BUTTON ANIMATION */
+  .comment-float-btn {
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    animation: cfloat 3s ease-in-out infinite;
+  }
+  .comment-float-btn:hover {
+    transform: scale(1.08) translateY(-2px);
+    box-shadow: 0 8px_32px rgba(1,173,159,0.55);
+  }
+  .comment-float-btn:active {
+    transform: scale(0.95);
+  }
+  @keyframes cfloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+  }
+
+  /* Ping ring behind button */
+  .comment-btn-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background: rgba(1,173,159,0.35);
+    animation: cring 2s ease-out infinite;
+    z-index: 0;
+  }
+  @keyframes cring {
+    0% { transform: scale(1); opacity: 0.7; }
+    100% { transform: scale(1.6); opacity: 0; }
+  }
 </style>
 
 <script>
@@ -263,10 +309,33 @@ const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
     const commentsListHook = document.getElementById("comments-list-hook");
     const noCommentsMsg = document.getElementById("no-comments-msg");
     const charCount = document.getElementById("char-count");
+    const validationMsg = document.getElementById("cf-validation-msg");
+    const successToast = document.getElementById("comment-success-toast");
 
-    // ✅ Token නැහැ — API URL සහ postId HTML data attributes වලින් ගන්නවා
     const postId = modal?.getAttribute("data-post-id") ?? "";
     const API_URL = modal?.getAttribute("data-api-url") ?? "";
+
+    // ✅ URL/link detection regex
+    const linkRegex = /https?:\/\/|www\.|\.com|\.lk|\.net|\.org|\.io/i;
+
+    // Show inline validation message
+    function showValidation(msg: string) {
+      if (!validationMsg) return;
+      validationMsg.textContent = msg;
+      validationMsg.classList.remove("hidden");
+      setTimeout(() => validationMsg.classList.add("hidden"), 4000);
+    }
+
+    // Show success toast
+    function showSuccessToast() {
+      if (!successToast) return;
+      successToast.classList.remove("opacity-0", "translate-y-4", "pointer-events-none");
+      successToast.classList.add("opacity-100", "translate-y-0");
+      setTimeout(() => {
+        successToast.classList.add("opacity-0", "translate-y-4");
+        successToast.classList.remove("opacity-100", "translate-y-0");
+      }, 3000);
+    }
 
     // Character counter
     textarea?.addEventListener("input", () => {
@@ -285,18 +354,18 @@ const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
 
       const name = document.createElement("span");
       name.className = "text-xs font-bold text-[#01AD9F]";
-      name.textContent = "Anonymous Reader"; // textContent = XSS safe
+      name.textContent = "Anonymous Reader";
 
       const dateEl = document.createElement("span");
       dateEl.className = "text-[11px] text-white/30";
-      dateEl.textContent = dateStr; // textContent = XSS safe
+      dateEl.textContent = dateStr;
 
       header.appendChild(name);
       header.appendChild(dateEl);
 
       const body = document.createElement("p");
       body.className = "text-sm text-white/80 leading-relaxed";
-      body.textContent = content; // ✅ textContent — XSS inject කරන්න බැහැ
+      body.textContent = content;
 
       card.appendChild(header);
       card.appendChild(body);
@@ -311,21 +380,23 @@ const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
     // Fetch comments
     async function loadComments() {
       if (!commentsListHook || !postId || !API_URL) return;
-      if (noCommentsMsg) noCommentsMsg.textContent = "කමෙන්ට්ස් ලෝඩ් වෙමින් පවතී...";
+      if (noCommentsMsg) {
+        noCommentsMsg.style.display = "";
+        noCommentsMsg.textContent = "කමෙන්ට්ස් ලෝඩ් වෙමින් පවතී...";
+      }
+      // Clear old rendered cards before reload
+      Array.from(commentsListHook.children).forEach((child) => {
+        if (child.id !== "no-comments-msg") child.remove();
+      });
 
       try {
         const res = await fetch(`${API_URL}?postId=${encodeURIComponent(postId)}`);
-
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const comments: Array<{ content: string; date?: string; created_at?: string }> = await res.json();
 
         if (comments.length > 0) {
           if (noCommentsMsg) noCommentsMsg.style.display = "none";
-          // Clear existing (except noCommentsMsg)
-          Array.from(commentsListHook.children).forEach((child) => {
-            if (child.id !== "no-comments-msg") child.remove();
-          });
           comments.forEach((c) => renderCommentCard(c.content, c.date ?? c.created_at ?? ""));
         } else {
           if (noCommentsMsg) {
@@ -364,7 +435,6 @@ const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
     closeBtn?.addEventListener("click", closeModal);
     modal?.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
 
-    // Keyboard: Escape closes modal
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && modal && !modal.classList.contains("hidden")) closeModal();
     });
@@ -372,12 +442,23 @@ const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
     // Submit comment
     submitBtn?.addEventListener("click", async () => {
       const content = textarea?.value.trim() ?? "";
+
+      // ✅ Empty validation
       if (!content) {
-        alert("කරුණාකර හිස් කමෙන්ට් ඉදිරිපත් කිරීමෙන් වලකින්න!");
+        showValidation("⚠️ හිස් අදහස් පල කරන්න බැහැ. කරුණාකර ඔබේ අදහස ලියන්න!");
+        textarea?.focus();
         return;
       }
+
+      // ✅ Link validation
+      if (linkRegex.test(content)) {
+        showValidation("🔗 ලින්ක් දැමීමට අවසර නැහැ. කරුණාකර ලින්ක් ඉවත් කර ඔබේ අදහස දක්වන්න.");
+        textarea?.focus();
+        return;
+      }
+
       if (content.length > 1000) {
-        alert("කමෙන්ට් එක අකුරු 1000 ට වඩා දිගු විය නොහැකිය.");
+        showValidation("⚠️ කමෙන්ට් එක අකුරු 1000 ට වඩා දිගු විය නොහැකිය.");
         return;
       }
 
@@ -397,16 +478,19 @@ const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
 
         if (res.ok) {
           if (noCommentsMsg) noCommentsMsg.style.display = "none";
-          renderCommentCard(content, dateStr, true); // prepend = newest first
+          // ✅ Double submit fix: render UI card only, no reload
+          renderCommentCard(content, dateStr, true);
           if (textarea) textarea.value = "";
           if (charCount) charCount.textContent = "0 / 1000";
+          if (validationMsg) validationMsg.classList.add("hidden");
+          showSuccessToast();
         } else {
           const err = await res.json().catch(() => ({})) as { error?: string };
-          alert(err.error ?? "කමෙන්ට් එක ඉදිරිපත් කිරීමට නොහැකි වුණා. නැවත උත්සාහ කරන්න.");
+          showValidation(err.error ?? "කමෙන්ට් එක ඉදිරිපත් කිරීමට නොහැකි වුණා. නැවත උත්සාහ කරන්න.");
         }
       } catch (err) {
         console.error("Submit error:", err);
-        alert("ජාල දෝෂයක් ඇති විය. ඔබේ ආනබන්ධනය පරීක්ෂා කරන්න.");
+        showValidation("ජාල දෝෂයක් ඇති විය. ඔබේ සම්බන්ධතාව පරීක්ෂා කරන්න.");
       } finally {
         submitBtn.textContent = "Submit Comment";
         submitBtn.disabled = false;

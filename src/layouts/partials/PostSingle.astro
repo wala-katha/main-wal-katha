@@ -16,28 +16,28 @@ const { title, description, authors, categories, image, date, tags } =
   post.data;
 
 // 🎯 SMART SEO RELATED POSTS LOGIC:
-// 1. දැනට කියවන පෝස්ට් එක අයින් කර සමාන කැටගරි තියෙන පෝස්ට් පෙරීම
 let smartSimilarPosts = posts.filter(
   (p) => p.id !== post.id && p.data.categories?.some((cat) => categories?.includes(cat))
 );
 
-// 2. ⚡ SEO FALLBACK: සමාන කැටගරි නැත්නම්, සයිට් එකේ තියෙන වෙනත් ඕනෑම පෝස්ට් ඔටෝ අරන් පෙන්වීම (හිස්ව තැබීම SEO වලට අහිතකරයි)
 if (!smartSimilarPosts || smartSimilarPosts.length === 0) {
   smartSimilarPosts = posts.filter((p) => p.id !== post.id);
 }
 
-// 3. FIX: උඹ ඉල්ලපු විදිහටම කෙළින් අතට (2:3) ලස්സනට පේළියට වාඩි වෙන්න පෝස්ට් ප්‍රමාණය 6ක් දක්වා වැඩි කළා
 const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
+
+// 👑 CLOUDFLARE ACCOUNT/INTEGRATION CONFIG
+const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
 ---
 
-<section class="section bg-[#010203]">
+<section class="section bg-[#010203] relative">
   <div class="container">
     <article class="row justify-center">
-      {/* POST TITLE: ප්‍රධාන මාතෘකාව #F8F8FF වලින් උපරිම සුදු කර ඉස්මතු කළා */}
+      {/* POST TITLE */}
       <div class="md:col-10 text-center">
         <h1 set:html={markdownify(title)} class="h2 text-[#F8F8FF] font-black drop-shadow-md" />
         
-        {/* META INFO ROW: මෙටා ඩේටා සහ අයිකන කළු පසුබිමට කැපී පෙනෙන සේ සැකසීම */}
+        {/* META INFO ROW */}
         <ul class="mt-4 flex flex-wrap items-center justify-center text-[#F8F8FF]/90">
           <li class="mx-3">
             {
@@ -108,14 +108,12 @@ const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
       </div>
 
       <div class="md:col-10">
-        {/* 👑 ULTIMATE POST CONTENT TYPOGRAPHY FIX: 
-            පෝස්ට් එක ඇතුළේ Markdown වලින් ජෙනරේට් වෙන සියලුම අකුරු, පේළි, ලිස්ට්, බ්ලොක්කෝට්ස්, 
-            මාතෘකා සියල්ල කළු පසුබිම මත උපරිමයෙන්ම පෙනීමට #F8F8FF සහ Tailwind custom css යෙදුවා */}
+        {/* 👑 ULTIMATE POST CONTENT TYPOGRAPHY FIX */}
         <div class="content mb-16 text-left text-[#F8F8FF] custom-post-content">
           <Content />
         </div>
         
-        {/* TAGS BLOCK: උඹ ඉල්ලපු විදිහටම තද කහ පැහැති පසුබිම සහ කළු අකුරු වලින් බොත්තම් සකස් කළා */}
+        {/* TAGS BLOCK */}
         <div class="flex flex-wrap items-center justify-between border-t border-white/10 pt-6">
           <ul class="mr-4 mb-4 space-x-3">
             {
@@ -141,20 +139,89 @@ const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
       </div>
     </article>
   </div>
+
+  {/* ==========================================================
+     👑 SMART FLOATING COMMENT POPUP SYSTEM (CLOUDFLARE INTEGRATED)
+     ========================================================== */}
+  {/* 💬 පාවෙන කමෙන්ට් බටන් එක (Floating Toggle Button) */}
+  <button
+    id="comment-floating-btn"
+    class="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-[#01AD9F] text-[#010203] font-black px-5 py-3 rounded-full shadow-[0_4px_20px_rgba(1,173,159,0.4)] hover:bg-[#01c4b4] hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer select-none"
+    aria-label="Open Comments Section"
+  >
+    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+      <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+    </svg>
+    <span>කමෙන්ට්ස් (Comments)</span>
+  </button>
+
+  {/* 🛑 කමෙන්ට්ස් පොපප් බොක්ස් එක (Popup Modal Window) */}
+  <div
+    id="comment-popup-modal"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#010203]/70 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Comments Center"
+  >
+    <div class="relative w-full max-w-2xl bg-[#0c0d10] border border-white/10 rounded-2xl shadow-[0_10px_50px_rgba(0,0,0,0.8)] flex flex-col max-h-[85vh]">
+      {/* පොපප් එකේ හෙඩර් කොටස */}
+      <div class="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
+        <h3 class="text-lg font-black text-[#F8F8FF] flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#01AD9F] animate-pulse"></span>
+          අදහස් සහ කමෙන්ට්ස්
+        </h3>
+        <button
+          id="comment-close-btn"
+          class="p-1.5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.08] text-white/60 hover:text-red-400 transition-colors duration-200 cursor-pointer outline-none"
+          aria-label="Close Comments Modal"
+        >
+          <svg class="w-6 h-6 stroke-current fill-none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      {/* 🔮 සජීවී කමෙන්ට්ස් ලෝඩ් වන කොටස */}
+      <div class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+        {/* Cloudflare Platform Loader Wrapper */}
+        <div 
+          id="cloudflare-comment-container" 
+          data-cf-token={cloudflareTokenId}
+          data-post-id={post.id}
+          class="text-center py-6"
+        >
+          {/* Default Standard Comment Box Fallback UI */}
+          <div class="mb-4">
+            <textarea 
+              id="cf-comment-text"
+              class="w-full h-24 p-3 bg-white/5 border border-white/10 rounded-xl text-[#F8F8FF] placeholder-white/30 focus:border-[#01AD9F] outline-none transition duration-200 resize-none text-sm"
+              placeholder="ඔබේ කමෙන්ට් එක මෙතන ටයිප් කරන්න..."
+            ></textarea>
+            <button 
+              id="cf-submit-comment"
+              class="mt-2 w-full bg-[#01AD9F] text-[#010203] font-bold py-2 rounded-xl text-sm transition hover:bg-[#01c4b4]"
+            >
+              Submit Comment
+            </button>
+          </div>
+          <div class="border-t border-white/5 pt-4 text-left">
+            <p class="text-xs text-white/40 tracking-wider uppercase mb-3 font-semibold">Recent Comments</p>
+            <p id="no-comments-msg" class="text-sm text-white/50 italic py-2 text-center">තවම කමෙන්ට්ස් කිසිවක් නැත. පළමුවැන්නා වන්න!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
 
-{/* 👑 SUGGESTED STORIES BLOCK:
-    1. පසුබිම: කළු ➔ තද කොළ ➔ කළු (from-[#010203] via-[#013220]/40 to-[#010203]) 3-Way Gradient එකක් දැම්මා.
-    2. ඇනිමේෂන්: කිසිදු ට්‍රාන්සිෂන් හෝ ඇනිමේෂන් එකක් නැති ස්ථාවර ලුක් එකක් දුන්නා. */}
+{/* RELATED STORIES BLOCK */}
 {
   finalSimilarPosts.length > 0 && (
     <section class="section pt-12 pb-16 bg-gradient-to-b from-[#010203] via-[#022c16] to-[#010203] border-t border-white/5">
       <div class="container">
-        {/* ටයිටල් එක හරියටම මැදට (text-center) ගෙන, පැති බෝඩර් ඉවත් කර පිරිසිදු තද සුදු කර ඉස්මතු කළා */}
         <h2 class="mb-8 font-black text-center h4 text-[#F8F8FF]">
           ඔබ කැමති විය හැකි තවත් කතා (Suggested Stories)
         </h2>
-        
         <div class="row">
           <SimilarPosts posts={finalSimilarPosts} />
         </div>
@@ -163,8 +230,6 @@ const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
   )
 }
 
-{/* ⚡ SCOPED CSS FOR ADVANCED TYPOGRAPHY COMPATIBILITY:
-    Markdown මඟින් එන ඕනෑම ඡේදයක් හෝ Span එකක් නිතැතින්ම #F8F8FF වන බව සනාථ කිරීමේ SEO ආරක්ෂක පියවරක් */}
 <style is:global>
   .custom-post-content p, 
   .custom-post-content span, 
@@ -179,4 +244,57 @@ const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
   .custom-post-content blockquote p {
     color: #F8F8FF/80 !important;
   }
+
+  /* 🍿 Custom Scrollbar inside Popup Component */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 99px;
+  }
 </style>
+
+<script>
+  function initCommentPopupLogic() {
+    const floatingBtn = document.getElementById("comment-floating-btn");
+    const modal = document.getElementById("comment-popup-modal");
+    const closeBtn = document.getElementById("comment-close-btn");
+
+    if (floatingBtn && modal && closeBtn) {
+      // 🔓 Open Modal Window smoothly
+      floatingBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        modal.classList.remove("hidden");
+        setTimeout(() => {
+          modal.classList.remove("opacity-0", "pointer-events-none");
+        }, 10);
+      });
+
+      // 🔒 Close Modal Window via Button
+      closeBtn.addEventListener("click", () => {
+        modal.classList.add("opacity-0", "pointer-events-none");
+        setTimeout(() => {
+          modal.classList.add("hidden");
+        }, 300);
+      });
+
+      // 🎯 Close modal if user clicks outside the box boundary
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) {
+          modal.classList.add("opacity-0", "pointer-events-none");
+          setTimeout(() => {
+            modal.classList.add("hidden");
+          }, 300);
+        }
+      });
+    }
+  }
+
+  // Bind handlers on Document loaded states securely
+  document.addEventListener("DOMContentLoaded", initCommentPopupLogic);
+  document.addEventListener("astro:page-load", initCommentPopupLogic);
+</script>

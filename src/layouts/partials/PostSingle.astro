@@ -1,6 +1,6 @@
 ---
 import Share from "@/components/Share.astro";
-import SimilarPosts from "@/layouts/components/SimilarPosts.astro";
+import SimilarPosts from "@/layouts/components/SimilarPosts.astro"; // ⚠️ FIXED
 import { getSinglePage } from "@/lib/contentParser.astro";
 import dateFormat from "@/lib/utils/dateFormat";
 import { humanize, markdownify, slugify } from "@/lib/utils/textConverter";
@@ -26,7 +26,7 @@ if (!smartSimilarPosts || smartSimilarPosts.length === 0) {
 
 const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
 
-// 👑 CLOUDFLARE ACCOUNT CONFIG (No Auth Restrictions Now)
+// 👑 CLOUDFLARE ACCOUNT CONFIG
 const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
 ---
 
@@ -141,7 +141,7 @@ const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
   </div>
 
   {/* ==========================================================
-     👑 SMART FLOATING COMMENT POPUP SYSTEM (SEO OPTIMIZED)
+     👑 SMART FLOATING COMMENT POPUP SYSTEM (SEO FULL CONTROL)
      ========================================================== */}
   <button
     id="comment-floating-btn"
@@ -182,13 +182,14 @@ const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
         <div 
           id="cloudflare-comment-container" 
           data-post-id={post.id}
+          data-cf-token={cloudflareTokenId}
           class="text-center py-6"
         >
           <div class="mb-4 text-left">
             <textarea 
               id="cf-comment-text"
               class="w-full h-24 p-3 bg-white/5 border border-white/10 rounded-xl text-[#F8F8FF] placeholder-white/30 focus:border-[#01AD9F] outline-none transition duration-200 resize-none text-sm"
-              placeholder="ඔබේ අදහස මෙතන ලියන්න (කිසිම සීමාවක් නැත)..."
+              placeholder="ඔබේ අදහස මෙතන ලියන්න..."
             ></textarea>
             <button 
               id="cf-submit-comment"
@@ -199,6 +200,7 @@ const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
           </div>
           <div class="border-t border-white/5 pt-4 text-left">
             <p class="text-xs text-white/40 tracking-wider uppercase mb-3 font-semibold">Recent Comments</p>
+            {/* 🎯 SEO Optimization Block for Google Crawlers */}
             <div id="comments-list-hook" class="space-y-3">
               <p id="no-comments-msg" class="text-sm text-white/50 italic py-2 text-center">කමෙන්ට්ස් ලෝඩ් වෙමින් පවතී...</p>
             </div>
@@ -250,6 +252,9 @@ const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
 
 <script>
   function initCommentPopupLogic() {
+    // 🛡️ Guard Flag: Astro View Transitions වලදී Listener එක එකම Element එකට ඩබල් බයින්ඩ් වීම වළක්වයි
+    if ((window as any).__commentsInitialized) return;
+
     const floatingBtn = document.getElementById("comment-floating-btn");
     const modal = document.getElementById("comment-popup-modal");
     const closeBtn = document.getElementById("comment-close-btn");
@@ -259,21 +264,27 @@ const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
     const noCommentsMsg = document.getElementById("no-comments-msg");
     const container = document.getElementById("cloudflare-comment-container");
 
-    const postId = container?.getAttribute("data-post-id");
+    if (!floatingBtn || !modal || !container || !submitBtn || !textarea) return;
+
+    // Set globally initialized flag
+    (window as any).__commentsInitialized = true;
+
+    const postId = container.getAttribute("data-post-id");
+    const cfToken = container.getAttribute("data-cf-token");
     const API_URL = "https://comments.wala-katha.workers.dev/api/comments";
 
-    if (!floatingBtn || !modal || !container) return;
-
-    // Clean up older event listeners to avoid dynamic duplicates
-    const cloneFloating = floatingBtn.cloneNode(true);
-    floatingBtn.parentNode?.replaceChild(cloneFloating, floatingBtn);
-    
-    // 🔄 1. FETCH AND DEEP RENDER COMMENTS (SEO SAFE)
+    // 🔄 1. FETCH COMMENTS FROM WORKER DATABASE
     async function loadSavedComments() {
       if (!commentsListHook || !postId) return;
       
       try {
-        const response = await fetch(`${API_URL}?postId=${encodeURIComponent(postId)}`);
+        const response = await fetch(`${API_URL}?postId=${encodeURIComponent(postId)}`, {
+          method: "GET",
+          headers: {
+            "Accept": "application/json"
+          }
+        });
+
         if (response.ok) {
           const comments = await response.json();
           if (comments && comments.length > 0) {
@@ -288,9 +299,12 @@ const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
               noCommentsMsg.innerText = "තවම අදහස් කිසිවක් නැත. පළමුවැන්නා වන්න!";
             }
           }
+        } else {
+          if (noCommentsMsg) noCommentsMsg.innerText = "කමෙන්ට්ස් ලබා ගැනීමට නොහැකි වුණා.";
         }
       } catch (err) {
-        console.error("SEO Fetch Error:", err);
+        console.error("Cloudflare Connection Error:", err);
+        if (noCommentsMsg) noCommentsMsg.innerText = "සර්වර් එක ක්‍රියා විරහිතයි.";
       }
     }
 
@@ -308,8 +322,8 @@ const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
       commentsListHook.appendChild(card);
     }
 
-    // Modal Control Triggers
-    document.getElementById("comment-floating-btn")?.addEventListener("click", (e) => {
+    // Modal Events Binding
+    floatingBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       modal.classList.remove("hidden");
       setTimeout(() => {
@@ -323,10 +337,22 @@ const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
       setTimeout(() => modal.classList.add("hidden"), 300);
     });
 
-    // 🚀 2. SUBMIT COMMENT WITHOUT RESTRICTION HEADERS
-    submitBtn?.addEventListener("click", async () => {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.classList.add("opacity-0", "pointer-events-none");
+        setTimeout(() => modal.classList.add("hidden"), 300);
+      }
+    });
+
+    // 🚀 2. SUBMIT DATA TO CLOUDFLARE WORKER (STANDARD CLEAN POST METHOD)
+    submitBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
       const commentContent = textarea.value.trim();
-      if (!commentContent) return;
+      
+      if (!commentContent) {
+        alert("හිස් අදහස් ඉදිරිපත් කළ නොහැක!");
+        return;
+      }
 
       submitBtn.innerText = "Submitting...";
       submitBtn.disabled = true;
@@ -340,15 +366,21 @@ const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
       try {
         const response = await fetch(API_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ postId, content: commentContent, date: currentDate })
+          headers: { 
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ 
+            postId: postId, 
+            content: commentContent,
+            date: currentDate
+          })
         });
 
         if (response.ok) {
           if (noCommentsMsg) noCommentsMsg.style.display = "none";
           
           const newCard = document.createElement("div");
-          newCard.className = "p-3.5 bg-white/[0.03] border border-white/[0.06] rounded-xl text-left shadow-sm";
+          newCard.className = "p-3.5 bg-white/[0.03] border border-white/[0.06] rounded-xl text-left shadow-sm animate-fade-in";
           newCard.innerHTML = `
             <div class="flex items-center justify-between mb-1.5">
               <span class="text-xs font-bold text-[#01AD9F]">Anonymous Reader</span>
@@ -356,13 +388,16 @@ const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
             </div>
             <p class="text-sm text-white/80 leading-relaxed">${commentContent}</p>
           `;
+          
           commentsListHook?.insertBefore(newCard, commentsListHook.firstChild);
           textarea.value = "";
         } else {
-          alert("සර්වර් එක සමඟ සම්බන්ධ වීමට නොහැකි වුණා.");
+          const errorText = await response.text();
+          alert(`Error: ${errorText || "කමෙන්ට් එක යැවීමට නොහැකි වුණා."}`);
         }
       } catch (err) {
-        console.error("Submission Failure:", err);
+        console.error("Submission Network Error:", err);
+        alert("සර්වර් එකට දත්ත යැවීමේදී දෝෂයක් ඇතිවිය.");
       } finally {
         submitBtn.innerText = "Submit Comment";
         submitBtn.disabled = false;
@@ -370,7 +405,13 @@ const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
     });
   }
 
-  // Bind cleanly for Astro page lifecycles
-  document.addEventListener("DOMContentLoaded", initCommentPopupLogic);
-  document.addEventListener("astro:page-load", initCommentPopupLogic);
+  // Astro page triggers execution hook
+  document.addEventListener("DOMContentLoaded", () => {
+    (window as any).__commentsInitialized = false;
+    initCommentPopupLogic();
+  });
+  document.addEventListener("astro:page-load", () => {
+    (window as any).__commentsInitialized = false;
+    initCommentPopupLogic();
+  });
 </script>

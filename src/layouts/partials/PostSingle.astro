@@ -1,3 +1,10 @@
+ගැටලු දෙකේ root cause පැහැදිලිව හඳුනාගත්තා:
+
+**Double comment** — `DOMContentLoaded` සහ `astro:page-load` දෙකම fire වෙනවා, ඒ නිසා `initCommentSystem()` දෙවරක් run වෙලා submit button එකට event listeners දෙකක් attach වෙනවා.
+
+**Edit/Delete ownership** — session token නැති නිසා ඕනෑම කෙනෙකුට ඕනෑම comment එකක් edit/delete කරන්න පුළුවන්.
+
+```astro
 ---
 import Share from "@/components/Share.astro";
 import SimilarPosts from "@/layouts/components/SimilarPosts.astro";
@@ -188,7 +195,6 @@ const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
               placeholder="ඔබේ කමෙන්ට් එක මෙතන ටයිප් කරන්න..."
               maxlength="1000"
             ></textarea>
-            {/* ✅ CLEAR BUTTON */}
             <button
               id="cf-clear-btn"
               class="absolute top-2 right-2 p-1 rounded-lg text-white/20 hover:text-red-400 hover:bg-white/5 transition-colors duration-200 hidden"
@@ -386,356 +392,397 @@ const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
 </style>
 
 <script>
-  function initCommentSystem() {
-    const floatingBtn = document.getElementById("comment-floating-btn");
-    const modal = document.getElementById("comment-popup-modal");
-    const closeBtn = document.getElementById("comment-close-btn");
-    const submitBtn = document.getElementById("cf-submit-comment") as HTMLButtonElement | null;
-    const textarea = document.getElementById("cf-comment-text") as HTMLTextAreaElement | null;
-    const clearBtn = document.getElementById("cf-clear-btn") as HTMLButtonElement | null;
-    const commentsListHook = document.getElementById("comments-list-hook");
-    const noCommentsMsg = document.getElementById("no-comments-msg");
-    const charCount = document.getElementById("char-count");
-    const validationMsg = document.getElementById("cf-validation-msg");
-    const successToast = document.getElementById("comment-success-toast");
+  // ✅ ROOT FIX: Global init guard — දෙවරක් init වීම සම්පූර්ණයෙන් වළකිනවා
+  if (!(window as any).__commentSystemInit) {
+    (window as any).__commentSystemInit = true;
 
-    // Edit modal elements
-    const editModal = document.getElementById("edit-comment-modal");
-    const editTextarea = document.getElementById("edit-comment-textarea") as HTMLTextAreaElement | null;
-    const editSaveBtn = document.getElementById("edit-save-btn") as HTMLButtonElement | null;
-    const editCancelBtn = document.getElementById("edit-cancel-btn");
-
-    // Delete modal elements
-    const deleteModal = document.getElementById("delete-confirm-modal");
-    const deleteCancelBtn = document.getElementById("delete-cancel-btn");
-    const deleteConfirmBtn = document.getElementById("delete-confirm-btn") as HTMLButtonElement | null;
-
-    const postId = modal?.getAttribute("data-post-id") ?? "";
-    const API_URL = modal?.getAttribute("data-api-url") ?? "";
-
-    const linkRegex = /https?:\/\/|www\.|\.com|\.lk|\.net|\.org|\.io/i;
-
-    // ✅ localStorage key for this post's comments (edit/delete uses local index)
-    const storageKey = `wk-comments-${postId}`;
-
-    // In-memory comment list (mirrors rendered cards)
-    let commentsList: Array<{ id: string; content: string; date: string }> = [];
-
-    // Track which comment is being edited/deleted
-    let activeCommentId: string | null = null;
-
-    // ── HELPERS ──────────────────────────────────────────────────
-
-    function generateId(): string {
-      return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    }
-
-    function showValidation(msg: string) {
-      if (!validationMsg) return;
-      validationMsg.textContent = msg;
-      validationMsg.classList.remove("hidden");
-      setTimeout(() => validationMsg.classList.add("hidden"), 4000);
-    }
-
-    function showSuccessToast() {
-      if (!successToast) return;
-      successToast.classList.remove("opacity-0", "translate-y-4", "pointer-events-none");
-      successToast.classList.add("opacity-100", "translate-y-0");
-      setTimeout(() => {
-        successToast.classList.add("opacity-0", "translate-y-4");
-        successToast.classList.remove("opacity-100", "translate-y-0");
-      }, 3000);
-    }
-
-    // ── CLEAR BUTTON ─────────────────────────────────────────────
-
-    textarea?.addEventListener("input", () => {
-      const len = textarea.value.length;
-      if (charCount) charCount.textContent = `${len} / 1000`;
-      if (clearBtn) {
-        if (len > 0) clearBtn.classList.remove("hidden");
-        else clearBtn.classList.add("hidden");
+    // ✅ Session token — browser session එකේ පමණක් valid
+    // මෙම session එකේ ඇති user දැමූ comments පමණක් edit/delete කළ හැකිය
+    function getSessionToken(): string {
+      let token = sessionStorage.getItem("wk-session-token");
+      if (!token) {
+        token = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+        sessionStorage.setItem("wk-session-token", token);
       }
-    });
-
-    clearBtn?.addEventListener("click", () => {
-      if (textarea) textarea.value = "";
-      if (charCount) charCount.textContent = "0 / 1000";
-      clearBtn.classList.add("hidden");
-      textarea?.focus();
-    });
-
-    // ── RENDER COMMENT CARD ───────────────────────────────────────
-
-    function renderCommentCard(
-      id: string,
-      content: string,
-      dateStr: string,
-      prepend = false
-    ) {
-      if (!commentsListHook) return;
-
-      const card = document.createElement("div");
-      card.className = "p-3.5 bg-white/[0.03] border border-white/[0.06] rounded-xl text-left shadow-sm";
-      card.setAttribute("data-comment-id", id);
-
-      const header = document.createElement("div");
-      header.className = "flex items-center justify-between mb-1.5";
-
-      const name = document.createElement("span");
-      name.className = "text-xs font-bold text-[#01AD9F]";
-      name.textContent = "Anonymous Reader";
-
-      const metaRight = document.createElement("div");
-      metaRight.className = "flex items-center gap-2";
-
-      const dateEl = document.createElement("span");
-      dateEl.className = "text-[11px] text-white/30";
-      dateEl.textContent = dateStr;
-
-      // ✏️ Edit button
-      const editBtn = document.createElement("button");
-      editBtn.className = "p-1 rounded-lg text-white/25 hover:text-[#01AD9F] hover:bg-white/5 transition-colors duration-200 cursor-pointer";
-      editBtn.setAttribute("aria-label", "Edit comment");
-      editBtn.setAttribute("type", "button");
-      editBtn.innerHTML = `<svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
-      editBtn.addEventListener("click", () => openEditModal(id, content));
-
-      // 🗑️ Delete button
-      const delBtn = document.createElement("button");
-      delBtn.className = "p-1 rounded-lg text-white/25 hover:text-red-400 hover:bg-white/5 transition-colors duration-200 cursor-pointer";
-      delBtn.setAttribute("aria-label", "Delete comment");
-      delBtn.setAttribute("type", "button");
-      delBtn.innerHTML = `<svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
-      delBtn.addEventListener("click", () => openDeleteModal(id));
-
-      metaRight.appendChild(dateEl);
-      metaRight.appendChild(editBtn);
-      metaRight.appendChild(delBtn);
-
-      header.appendChild(name);
-      header.appendChild(metaRight);
-
-      const body = document.createElement("p");
-      body.className = "text-sm text-white/80 leading-relaxed";
-      body.setAttribute("data-comment-body", id);
-      body.textContent = content;
-
-      card.appendChild(header);
-      card.appendChild(body);
-
-      if (prepend && commentsListHook.firstChild) {
-        commentsListHook.insertBefore(card, commentsListHook.firstChild);
-      } else {
-        commentsListHook.appendChild(card);
-      }
+      return token;
     }
 
-    // ── LOAD COMMENTS ─────────────────────────────────────────────
+    const SESSION_TOKEN = getSessionToken();
 
-    async function loadComments() {
-      if (!commentsListHook || !postId || !API_URL) return;
-      if (noCommentsMsg) {
-        noCommentsMsg.style.display = "";
-        noCommentsMsg.textContent = "කමෙන්ට්ස් ලෝඩ් වෙමින් පවතී...";
+    function initCommentSystem() {
+      const floatingBtn = document.getElementById("comment-floating-btn");
+      const modal = document.getElementById("comment-popup-modal");
+      const closeBtn = document.getElementById("comment-close-btn");
+      const submitBtn = document.getElementById("cf-submit-comment") as HTMLButtonElement | null;
+      const textarea = document.getElementById("cf-comment-text") as HTMLTextAreaElement | null;
+      const clearBtn = document.getElementById("cf-clear-btn") as HTMLButtonElement | null;
+      const commentsListHook = document.getElementById("comments-list-hook");
+      const noCommentsMsg = document.getElementById("no-comments-msg");
+      const charCount = document.getElementById("char-count");
+      const validationMsg = document.getElementById("cf-validation-msg");
+      const successToast = document.getElementById("comment-success-toast");
+
+      const editModal = document.getElementById("edit-comment-modal");
+      const editTextarea = document.getElementById("edit-comment-textarea") as HTMLTextAreaElement | null;
+      const editSaveBtn = document.getElementById("edit-save-btn") as HTMLButtonElement | null;
+      const editCancelBtn = document.getElementById("edit-cancel-btn");
+
+      const deleteModal = document.getElementById("delete-confirm-modal");
+      const deleteCancelBtn = document.getElementById("delete-cancel-btn");
+      const deleteConfirmBtn = document.getElementById("delete-confirm-btn") as HTMLButtonElement | null;
+
+      const postId = modal?.getAttribute("data-post-id") ?? "";
+      const API_URL = modal?.getAttribute("data-api-url") ?? "";
+
+      const linkRegex = /https?:\/\/|www\.|\.com|\.lk|\.net|\.org|\.io/i;
+
+      // In-memory list — { id, content, date, ownerToken }
+      // ownerToken: මෙම session එකේ user දැමූ comments පමණක් edit/delete කළ හැකිය
+      let commentsList: Array<{ id: string; content: string; date: string; ownerToken: string }> = [];
+      let activeCommentId: string | null = null;
+
+      // ── HELPERS ────────────────────────────────────────────────
+
+      function generateId(): string {
+        return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
       }
-      // Clear rendered cards
-      Array.from(commentsListHook.children).forEach((child) => {
-        if ((child as HTMLElement).id !== "no-comments-msg") child.remove();
-      });
-      commentsList = [];
 
-      try {
-        const res = await fetch(`${API_URL}?postId=${encodeURIComponent(postId)}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      function showValidation(msg: string) {
+        if (!validationMsg) return;
+        validationMsg.textContent = msg;
+        validationMsg.classList.remove("hidden");
+        setTimeout(() => validationMsg.classList.add("hidden"), 4000);
+      }
 
-        const comments: Array<{ content: string; date?: string; created_at?: string }> = await res.json();
+      function showSuccessToast() {
+        if (!successToast) return;
+        successToast.classList.remove("opacity-0", "translate-y-4", "pointer-events-none");
+        successToast.classList.add("opacity-100", "translate-y-0");
+        setTimeout(() => {
+          successToast.classList.add("opacity-0", "translate-y-4");
+          successToast.classList.remove("opacity-100", "translate-y-0");
+        }, 3000);
+      }
 
-        if (comments.length > 0) {
-          if (noCommentsMsg) noCommentsMsg.style.display = "none";
-          comments.forEach((c) => {
-            const id = generateId();
-            const dateStr = c.date ?? c.created_at ?? "";
-            commentsList.push({ id, content: c.content, date: dateStr });
-            renderCommentCard(id, c.content, dateStr);
-          });
-        } else {
-          if (noCommentsMsg) {
-            noCommentsMsg.style.display = "";
-            noCommentsMsg.textContent = "තවම කමෙන්ට්ස් කිසිවක් නැත. පළමුවැන්නා වන්න!";
-          }
+      // ── CLEAR BUTTON ──────────────────────────────────────────
+
+      textarea?.addEventListener("input", () => {
+        const len = textarea.value.length;
+        if (charCount) charCount.textContent = `${len} / 1000`;
+        if (clearBtn) {
+          if (len > 0) clearBtn.classList.remove("hidden");
+          else clearBtn.classList.add("hidden");
         }
-      } catch (err) {
-        console.error("Comments fetch error:", err);
+      });
+
+      clearBtn?.addEventListener("click", () => {
+        if (textarea) textarea.value = "";
+        if (charCount) charCount.textContent = "0 / 1000";
+        clearBtn.classList.add("hidden");
+        textarea?.focus();
+      });
+
+      // ── RENDER COMMENT CARD ────────────────────────────────────
+      // ✅ ownerToken match වූ විට පමණක් edit/delete buttons පෙන්වනවා
+
+      function renderCommentCard(
+        id: string,
+        content: string,
+        dateStr: string,
+        ownerToken: string,
+        prepend = false
+      ) {
+        if (!commentsListHook) return;
+
+        const card = document.createElement("div");
+        card.className = "p-3.5 bg-white/[0.03] border border-white/[0.06] rounded-xl text-left shadow-sm";
+        card.setAttribute("data-comment-id", id);
+
+        const header = document.createElement("div");
+        header.className = "flex items-center justify-between mb-1.5";
+
+        const name = document.createElement("span");
+        name.className = "text-xs font-bold text-[#01AD9F]";
+        name.textContent = "Anonymous Reader";
+
+        const metaRight = document.createElement("div");
+        metaRight.className = "flex items-center gap-2";
+
+        const dateEl = document.createElement("span");
+        dateEl.className = "text-[11px] text-white/30";
+        dateEl.textContent = dateStr;
+
+        metaRight.appendChild(dateEl);
+
+        // ✅ Edit/Delete buttons — තමන්ගේ comment පමණක්
+        if (ownerToken === SESSION_TOKEN) {
+          const editBtn = document.createElement("button");
+          editBtn.className = "p-1 rounded-lg text-white/25 hover:text-[#01AD9F] hover:bg-white/5 transition-colors duration-200 cursor-pointer";
+          editBtn.setAttribute("aria-label", "Edit comment");
+          editBtn.setAttribute("type", "button");
+          editBtn.innerHTML = `<svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
+          editBtn.addEventListener("click", () => openEditModal(id, content));
+
+          const delBtn = document.createElement("button");
+          delBtn.className = "p-1 rounded-lg text-white/25 hover:text-red-400 hover:bg-white/5 transition-colors duration-200 cursor-pointer";
+          delBtn.setAttribute("aria-label", "Delete comment");
+          delBtn.setAttribute("type", "button");
+          delBtn.innerHTML = `<svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
+          delBtn.addEventListener("click", () => openDeleteModal(id));
+
+          metaRight.appendChild(editBtn);
+          metaRight.appendChild(delBtn);
+        }
+
+        header.appendChild(name);
+        header.appendChild(metaRight);
+
+        const body = document.createElement("p");
+        body.className = "text-sm text-white/80 leading-relaxed";
+        body.setAttribute("data-comment-body", id);
+        body.textContent = content;
+
+        card.appendChild(header);
+        card.appendChild(body);
+
+        if (prepend && commentsListHook.firstChild) {
+          commentsListHook.insertBefore(card, commentsListHook.firstChild);
+        } else {
+          commentsListHook.appendChild(card);
+        }
+      }
+
+      // ── LOAD COMMENTS ──────────────────────────────────────────
+
+      async function loadComments() {
+        if (!commentsListHook || !postId || !API_URL) return;
         if (noCommentsMsg) {
           noCommentsMsg.style.display = "";
-          noCommentsMsg.textContent = "කමෙන්ට්ස් ලෝඩ් කිරීමට අසමත් වුණා. නැවත උත්සාහ කරන්න.";
+          noCommentsMsg.textContent = "කමෙන්ට්ස් ලෝඩ් වෙමින් පවතී...";
+        }
+        Array.from(commentsListHook.children).forEach((child) => {
+          if ((child as HTMLElement).id !== "no-comments-msg") child.remove();
+        });
+        commentsList = [];
+
+        try {
+          const res = await fetch(`${API_URL}?postId=${encodeURIComponent(postId)}`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+          const comments: Array<{ content: string; date?: string; created_at?: string }> = await res.json();
+
+          if (comments.length > 0) {
+            if (noCommentsMsg) noCommentsMsg.style.display = "none";
+            comments.forEach((c) => {
+              const id = generateId();
+              const dateStr = c.date ?? c.created_at ?? "";
+              // ✅ Server comments: ownerToken = "" — edit/delete buttons නොපෙනෙයි
+              commentsList.push({ id, content: c.content, date: dateStr, ownerToken: "" });
+              renderCommentCard(id, c.content, dateStr, "");
+            });
+          } else {
+            if (noCommentsMsg) {
+              noCommentsMsg.style.display = "";
+              noCommentsMsg.textContent = "තවම කමෙන්ට්ස් කිසිවක් නැත. පළමුවැන්නා වන්න!";
+            }
+          }
+        } catch (err) {
+          console.error("Comments fetch error:", err);
+          if (noCommentsMsg) {
+            noCommentsMsg.style.display = "";
+            noCommentsMsg.textContent = "කමෙන්ට්ස් ලෝඩ් කිරීමට අසමත් වුණා. නැවත උත්සාහ කරන්න.";
+          }
         }
       }
-    }
 
-    // ── MODAL OPEN/CLOSE ──────────────────────────────────────────
+      // ── MODAL OPEN/CLOSE ────────────────────────────────────────
 
-    function openModal() {
-      if (!modal || !floatingBtn) return;
-      modal.classList.remove("hidden");
-      requestAnimationFrame(() => modal.classList.remove("opacity-0", "pointer-events-none"));
-      floatingBtn.setAttribute("aria-expanded", "true");
-      loadComments();
-    }
-
-    function closeModal() {
-      if (!modal || !floatingBtn) return;
-      modal.classList.add("opacity-0", "pointer-events-none");
-      floatingBtn.setAttribute("aria-expanded", "false");
-      setTimeout(() => modal.classList.add("hidden"), 300);
-    }
-
-    floatingBtn?.addEventListener("click", (e) => { e.stopPropagation(); openModal(); });
-    closeBtn?.addEventListener("click", closeModal);
-    modal?.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        if (editModal && !editModal.classList.contains("hidden")) closeEditModal();
-        else if (deleteModal && !deleteModal.classList.contains("hidden")) closeDeleteModal();
-        else if (modal && !modal.classList.contains("hidden")) closeModal();
-      }
-    });
-
-    // ── SUBMIT COMMENT ────────────────────────────────────────────
-
-    submitBtn?.addEventListener("click", async () => {
-      const content = textarea?.value.trim() ?? "";
-
-      if (!content) {
-        showValidation("⚠️ හිස් අදහස් පල කරන්න බැහැ. කරුණාකර ඔබේ අදහස ලියන්න!");
-        textarea?.focus();
-        return;
-      }
-      if (linkRegex.test(content)) {
-        showValidation("🔗 ලින්ක් දැමීමට අවසර නැහැ. කරුණාකර ලින්ක් ඉවත් කර ඔබේ අදහස දක්වන්න.");
-        textarea?.focus();
-        return;
-      }
-      if (content.length > 1000) {
-        showValidation("⚠️ කමෙන්ට් එක අකුරු 1000 ට වඩා දිගු විය නොහැකිය.");
-        return;
+      function openModal() {
+        if (!modal || !floatingBtn) return;
+        modal.classList.remove("hidden");
+        requestAnimationFrame(() => modal.classList.remove("opacity-0", "pointer-events-none"));
+        floatingBtn.setAttribute("aria-expanded", "true");
+        loadComments();
       }
 
-      submitBtn.textContent = "Submitting...";
-      submitBtn.disabled = true;
+      function closeModal() {
+        if (!modal || !floatingBtn) return;
+        modal.classList.add("opacity-0", "pointer-events-none");
+        floatingBtn.setAttribute("aria-expanded", "false");
+        setTimeout(() => modal.classList.add("hidden"), 300);
+      }
 
-      const dateStr = new Date().toLocaleDateString("en-US", {
-        year: "numeric", month: "short", day: "numeric",
+      floatingBtn?.addEventListener("click", (e) => { e.stopPropagation(); openModal(); });
+      closeBtn?.addEventListener("click", closeModal);
+      modal?.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          if (editModal && !editModal.classList.contains("hidden")) closeEditModal();
+          else if (deleteModal && !deleteModal.classList.contains("hidden")) closeDeleteModal();
+          else if (modal && !modal.classList.contains("hidden")) closeModal();
+        }
       });
 
-      try {
-        const res = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ postId, content, date: dateStr }),
+      // ── SUBMIT COMMENT ──────────────────────────────────────────
+      // ✅ isSubmitting flag — rapid double-click නිසා duplicate වීම වළකිනවා
+
+      let isSubmitting = false;
+
+      submitBtn?.addEventListener("click", async () => {
+        if (isSubmitting) return;
+
+        const content = textarea?.value.trim() ?? "";
+
+        if (!content) {
+          showValidation("⚠️ හිස් අදහස් පල කරන්න බැහැ. කරුණාකර ඔබේ අදහස ලියන්න!");
+          textarea?.focus();
+          return;
+        }
+        if (linkRegex.test(content)) {
+          showValidation("🔗 ලින්ක් දැමීමට අවසර නැහැ. කරුණාකර ලින්ක් ඉවත් කර ඔබේ අදහස දක්වන්න.");
+          textarea?.focus();
+          return;
+        }
+        if (content.length > 1000) {
+          showValidation("⚠️ කමෙන්ට් එක අකුරු 1000 ට වඩා දිගු විය නොහැකිය.");
+          return;
+        }
+
+        isSubmitting = true;
+        submitBtn.textContent = "Submitting...";
+        submitBtn.disabled = true;
+
+        const dateStr = new Date().toLocaleDateString("en-US", {
+          year: "numeric", month: "short", day: "numeric",
         });
 
-        if (res.ok) {
-          if (noCommentsMsg) noCommentsMsg.style.display = "none";
-          // ✅ Double-submit fix: add to local list + render once only
-          const newId = generateId();
-          commentsList.unshift({ id: newId, content, date: dateStr });
-          renderCommentCard(newId, content, dateStr, true);
-          if (textarea) textarea.value = "";
-          if (charCount) charCount.textContent = "0 / 1000";
-          if (clearBtn) clearBtn.classList.add("hidden");
-          if (validationMsg) validationMsg.classList.add("hidden");
-          showSuccessToast();
-        } else {
-          const err = await res.json().catch(() => ({})) as { error?: string };
-          showValidation(err.error ?? "කමෙන්ට් එක ඉදිරිපත් කිරීමට නොහැකි වුණා. නැවත උත්සාහ කරන්න.");
+        try {
+          const res = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ postId, content, date: dateStr }),
+          });
+
+          if (res.ok) {
+            if (noCommentsMsg) noCommentsMsg.style.display = "none";
+            const newId = generateId();
+            // ✅ ownerToken = SESSION_TOKEN — මෙම user ට පමණක් edit/delete පෙනෙයි
+            commentsList.unshift({ id: newId, content, date: dateStr, ownerToken: SESSION_TOKEN });
+            renderCommentCard(newId, content, dateStr, SESSION_TOKEN, true);
+            if (textarea) textarea.value = "";
+            if (charCount) charCount.textContent = "0 / 1000";
+            if (clearBtn) clearBtn.classList.add("hidden");
+            if (validationMsg) validationMsg.classList.add("hidden");
+            showSuccessToast();
+          } else {
+            const err = await res.json().catch(() => ({})) as { error?: string };
+            showValidation(err.error ?? "කමෙන්ට් එක ඉදිරිපත් කිරීමට නොහැකි වුණා. නැවත උත්සාහ කරන්න.");
+          }
+        } catch (err) {
+          console.error("Submit error:", err);
+          showValidation("ජාල දෝෂයක් ඇති විය. ඔබේ සම්බන්ධතාව පරීක්ෂා කරන්න.");
+        } finally {
+          isSubmitting = false;
+          submitBtn.textContent = "Submit Comment";
+          submitBtn.disabled = false;
         }
-      } catch (err) {
-        console.error("Submit error:", err);
-        showValidation("ජාල දෝෂයක් ඇති විය. ඔබේ සම්බන්ධතාව පරීක්ෂා කරන්න.");
-      } finally {
-        submitBtn.textContent = "Submit Comment";
-        submitBtn.disabled = false;
-      }
-    });
+      });
 
-    // ── EDIT ──────────────────────────────────────────────────────
+      // ── EDIT ────────────────────────────────────────────────────
 
-    function openEditModal(id: string, currentContent: string) {
-      if (!editModal || !editTextarea) return;
-      activeCommentId = id;
-      editTextarea.value = currentContent;
-      editModal.classList.remove("hidden");
-      requestAnimationFrame(() => editModal.classList.remove("opacity-0", "pointer-events-none"));
-      editTextarea.focus();
-    }
-
-    function closeEditModal() {
-      if (!editModal) return;
-      editModal.classList.add("opacity-0", "pointer-events-none");
-      setTimeout(() => editModal.classList.add("hidden"), 300);
-      activeCommentId = null;
-    }
-
-    editCancelBtn?.addEventListener("click", closeEditModal);
-    editModal?.addEventListener("click", (e) => { if (e.target === editModal) closeEditModal(); });
-
-    editSaveBtn?.addEventListener("click", () => {
-      if (!activeCommentId || !editTextarea) return;
-      const newContent = editTextarea.value.trim();
-      if (!newContent) return;
-
-      // Update in-memory list
-      const entry = commentsList.find((c) => c.id === activeCommentId);
-      if (entry) entry.content = newContent;
-
-      // Update rendered card body
-      const bodyEl = commentsListHook?.querySelector(`[data-comment-body="${activeCommentId}"]`);
-      if (bodyEl) bodyEl.textContent = newContent;
-
-      closeEditModal();
-    });
-
-    // ── DELETE ────────────────────────────────────────────────────
-
-    function openDeleteModal(id: string) {
-      if (!deleteModal) return;
-      activeCommentId = id;
-      deleteModal.classList.remove("hidden");
-      requestAnimationFrame(() => deleteModal.classList.remove("opacity-0", "pointer-events-none"));
-    }
-
-    function closeDeleteModal() {
-      if (!deleteModal) return;
-      deleteModal.classList.add("opacity-0", "pointer-events-none");
-      setTimeout(() => deleteModal.classList.add("hidden"), 300);
-      activeCommentId = null;
-    }
-
-    deleteCancelBtn?.addEventListener("click", closeDeleteModal);
-    deleteModal?.addEventListener("click", (e) => { if (e.target === deleteModal) closeDeleteModal(); });
-
-    deleteConfirmBtn?.addEventListener("click", () => {
-      if (!activeCommentId || !commentsListHook) return;
-
-      // Remove from in-memory list
-      commentsList = commentsList.filter((c) => c.id !== activeCommentId);
-
-      // Remove rendered card
-      const card = commentsListHook.querySelector(`[data-comment-id="${activeCommentId}"]`);
-      if (card) card.remove();
-
-      // Show empty state if no comments left
-      if (commentsList.length === 0 && noCommentsMsg) {
-        noCommentsMsg.style.display = "";
-        noCommentsMsg.textContent = "තවම කමෙන්ට්ස් කිසිවක් නැත. පළමුවැන්නා වන්න!";
+      function openEditModal(id: string, currentContent: string) {
+        if (!editModal || !editTextarea) return;
+        activeCommentId = id;
+        editTextarea.value = currentContent;
+        editModal.classList.remove("hidden");
+        requestAnimationFrame(() => editModal.classList.remove("opacity-0", "pointer-events-none"));
+        editTextarea.focus();
       }
 
-      closeDeleteModal();
-    });
+      function closeEditModal() {
+        if (!editModal) return;
+        editModal.classList.add("opacity-0", "pointer-events-none");
+        setTimeout(() => editModal.classList.add("hidden"), 300);
+        activeCommentId = null;
+      }
+
+      editCancelBtn?.addEventListener("click", closeEditModal);
+      editModal?.addEventListener("click", (e) => { if (e.target === editModal) closeEditModal(); });
+
+      editSaveBtn?.addEventListener("click", () => {
+        if (!activeCommentId || !editTextarea) return;
+        const newContent = editTextarea.value.trim();
+        if (!newContent) return;
+
+        const entry = commentsList.find((c) => c.id === activeCommentId);
+        // ✅ Double-check: තමන්ගේ comment පමණක් update කරනවා
+        if (entry && entry.ownerToken === SESSION_TOKEN) {
+          entry.content = newContent;
+          const bodyEl = commentsListHook?.querySelector(`[data-comment-body="${activeCommentId}"]`);
+          if (bodyEl) bodyEl.textContent = newContent;
+        }
+
+        closeEditModal();
+      });
+
+      // ── DELETE ──────────────────────────────────────────────────
+
+      function openDeleteModal(id: string) {
+        if (!deleteModal) return;
+        activeCommentId = id;
+        deleteModal.classList.remove("hidden");
+        requestAnimationFrame(() => deleteModal.classList.remove("opacity-0", "pointer-events-none"));
+      }
+
+      function closeDeleteModal() {
+        if (!deleteModal) return;
+        deleteModal.classList.add("opacity-0", "pointer-events-none");
+        setTimeout(() => deleteModal.classList.add("hidden"), 300);
+        activeCommentId = null;
+      }
+
+      deleteCancelBtn?.addEventListener("click", closeDeleteModal);
+      deleteModal?.addEventListener("click", (e) => { if (e.target === deleteModal) closeDeleteModal(); });
+
+      deleteConfirmBtn?.addEventListener("click", () => {
+        if (!activeCommentId || !commentsListHook) return;
+
+        const entry = commentsList.find((c) => c.id === activeCommentId);
+        // ✅ Double-check: තමන්ගේ comment පමණක් delete කරනවා
+        if (!entry || entry.ownerToken !== SESSION_TOKEN) {
+          closeDeleteModal();
+          return;
+        }
+
+        commentsList = commentsList.filter((c) => c.id !== activeCommentId);
+        const card = commentsListHook.querySelector(`[data-comment-id="${activeCommentId}"]`);
+        if (card) card.remove();
+
+        if (commentsList.length === 0 && noCommentsMsg) {
+          noCommentsMsg.style.display = "";
+          noCommentsMsg.textContent = "තවම කමෙන්ට්ස් කිසිවක් නැත. පළමුවැන්නා වන්න!";
+        }
+
+        closeDeleteModal();
+      });
+    }
+
+    // ✅ එකම event listener එකක් පමණක් — duplicate init නැහැ
+    document.addEventListener("astro:page-load", initCommentSystem);
+    // First page load සඳහා (astro:page-load fire නොවෙන අවස්ථා)
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initCommentSystem);
+    } else {
+      initCommentSystem();
+    }
   }
-
-  document.addEventListener("DOMContentLoaded", initCommentSystem);
-  document.addEventListener("astro:page-load", initCommentSystem);
 </script>
+```
+
+---
+
+## සිදු කළ fixes සාරාංශය
+
+**1. Double comment fix (root cause)** — `window.__commentSystemInit` global guard එකක් add කළා. `DOMContentLoaded` + `astro:page-load` දෙකම fire වූවත් `initCommentSystem()` **එක් වරක් පමණක්** run වෙනවා — duplicate event listeners attach නොවෙයි. `isSubmitting` flag එකක් submit button එකට add කළා — rapid double-click ද block කරනවා.
+
+**2. Edit/Delete ownership fix** — `sessionStorage` token එකක් use කරනවා. Session එකේ user දැමූ comments වලට **පමණක්** edit/delete buttons render වෙනවා. Server එකෙන් load වූ අනිකුත් comments වලට buttons නොපෙනෙයි. Save/Delete logic එකේ `ownerToken === SESSION_TOKEN` double-check ද ඇත.

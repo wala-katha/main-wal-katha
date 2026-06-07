@@ -1,4 +1,3 @@
-
 ---
 import Share from "@/components/Share.astro";
 import SimilarPosts from "@/layouts/components/SimilarPosts.astro";
@@ -77,7 +76,6 @@ const breadcrumbSchema = JSON.stringify({
 });
 ---
 
-<!-- SEO: Canonical + Meta -->
 <link rel="canonical" href={postUrl} />
 <meta name="description" content={description ?? title} />
 <meta name="keywords" content={tags?.join(", ") ?? ""} />
@@ -86,7 +84,6 @@ const breadcrumbSchema = JSON.stringify({
 <meta name="language" content="Sinhala" />
 <meta name="revisit-after" content="3 days" />
 
-<!-- Open Graph -->
 <meta property="og:type" content="article" />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description ?? title} />
@@ -101,14 +98,12 @@ const breadcrumbSchema = JSON.stringify({
 {categories?.map((c: string) => <meta property="article:section" content={humanize(c)} />)}
 {tags?.map((t: string) => <meta property="article:tag" content={humanize(t)} />)}
 
-<!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content={title} />
 <meta name="twitter:description" content={description ?? title} />
 {image && <meta name="twitter:image" content={`${siteUrl}${image}`} />}
 {image && <meta name="twitter:image:alt" content={title} />}
 
-<!-- Article + Breadcrumb Structured Data (JSON-LD) -->
 <script type="application/ld+json" set:html={articleSchema} />
 <script type="application/ld+json" set:html={breadcrumbSchema} />
 
@@ -360,7 +355,7 @@ const breadcrumbSchema = JSON.stringify({
       <h2 class="mb-8 font-black text-center h4 text-[#F8F8FF]">
         ඔබ කැමති විය හැකි තවත් කතා
       </h2>
-      <div class="row">
+      <div class="row book-shelf-container">
         <SimilarPosts posts={finalSimilarPosts} />
       </div>
     </div>
@@ -505,6 +500,78 @@ const breadcrumbSchema = JSON.stringify({
     0%, 100% { transform: scaleY(0.4); opacity: 0.4; }
     50%       { transform: scaleY(1);   opacity: 1;   }
   }
+
+  /* 📚 3D BOOK POPUP ENGINE FOR SIMILAR POSTS */
+  .book-shelf-container {
+    perspective: 1200px;
+  }
+  .book-shelf-container > div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+  }
+  /* SimilarPosts layout එකෙන් පිටවන card elements ඉලක්ක කිරීම */
+  .book-shelf-container a, 
+  .book-shelf-container .card {
+    position: relative;
+    width: 100%;
+    max-width: 170px;
+    aspect-ratio: 3 / 4;
+    perspective: 1000px;
+    transform-style: preserve-3d;
+    background: transparent !important;
+    border: none !important;
+    margin-bottom: 2rem;
+    transition: transform 0.5s ease;
+  }
+  .book-shelf-container img {
+    width: 100% !important;
+    height: 100% !important;
+    object-cover: cover !important;
+    border-radius: 3px 6px 6px 3px !important;
+    box-shadow: 
+      5px 5px 15px rgba(0,0,0,0.7),
+      -2px 0px 3px rgba(255,255,255,0.1) inset;
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.5s ease;
+    transform-origin: left center;
+  }
+  /* Smart 3D Hover Popup Trigger */
+  .book-shelf-container a:hover img,
+  .book-shelf-container .card:hover img {
+    transform: rotateY(-28deg) translateZ(12px) scale(1.05);
+    box-shadow: 
+      20px 15px 30px rgba(0,0,0,0.8),
+      -1px 0px 2px rgba(255,255,255,0.2) inset;
+  }
+  /* පොතක පිටු වැනි ස්වභාවික පෙනුමක් ලබාදෙන ත්‍රිමාණ අද්දර (Book Spine Simulation) */
+  .book-shelf-container a::before,
+  .book-shelf-container .card::before {
+    content: "";
+    position: absolute;
+    top: 1%;
+    left: 0;
+    width: 98%;
+    height: 98%;
+    background: #e2e8f0;
+    border-radius: 2px;
+    transform: rotateY(-24deg) translateZ(2px);
+    z-index: -1;
+    box-shadow: 4px 4px 10px rgba(0,0,0,0.5);
+    transition: transform 0.5s ease;
+    transform-origin: left center;
+  }
+  .book-shelf-container a:hover::before,
+  .book-shelf-container .card:hover::before {
+    transform: rotateY(-32deg) translateZ(3px) scale(1.05);
+  }
+  /* Card titles හෝ metadata පින්තූරයට යටින් ලස්සනට පෙළගැස්වීම */
+  .book-shelf-container h3, 
+  .book-shelf-container p,
+  .book-shelf-container span {
+    transform: translateZ(10px);
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+  }
 </style>
 
 <script>
@@ -567,7 +634,8 @@ const breadcrumbSchema = JSON.stringify({
     const postId = modal?.getAttribute("data-post-id") ?? "";
     const API_URL = modal?.getAttribute("data-api-url") ?? "";
 
-    const linkRegex = /https?:\/\/|www\.|\.com|\.lk|\.net|\.org|\.io/i;
+    // 🛡️ ADVANCED DEEP LINK REGEX FILTER (HTTPS, HTTP, WWW, සහ කිසිවක් නැති ඩොමේන් සියල්ලම අසුකර ගනී)
+    const linkRegex = /https?:\/\/|www\.|\b([a-z0-9]+(-[a-z0-9]+)*\.)+(com|lk|net|org|io|me|info|biz|cc|tv|xyz|app|xyz|tk|ga|cf|gq|ml|live|tech|site|online|store|blog)\b|\b[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,7}(?=\/|\b)/i;
 
     let commentsList: Array<{ id: string; content: string; date: string; ownerToken: string; serverId?: string }> = [];
 

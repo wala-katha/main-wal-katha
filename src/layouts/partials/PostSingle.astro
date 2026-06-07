@@ -1,3 +1,4 @@
+
 ---
 import Share from "@/components/Share.astro";
 import SimilarPosts from "@/layouts/components/SimilarPosts.astro";
@@ -391,7 +392,7 @@ const articleSchema = JSON.stringify({
     100% { transform: scale(1.6); opacity: 0; }
   }
 
-  /* ⚠️ WARNING NOTICE — enhanced */
+  /* ⚠️ WARNING NOTICE */
   .comment-warning-notice {
     background: linear-gradient(135deg, #0d0101 0%, #160303 50%, #0d0101 100%);
     box-shadow:
@@ -420,12 +421,15 @@ const articleSchema = JSON.stringify({
     50% { opacity: 0.6; filter: drop-shadow(0 0 6px rgba(239,68,68,0.9)); }
   }
 
-  /* ✍️ TYPEWRITER CURSOR */
+  /* ✍️ TYPEWRITER CURSOR — animation නවතී typewriter ඉවර වූ පසු */
   .warning-cursor {
     display: inline-block;
     font-weight: 900;
     animation: wblink 0.7s step-end infinite;
     margin-left: 1px;
+  }
+  .warning-cursor.done {
+    display: none;
   }
   @keyframes wblink {
     0%, 100% { opacity: 1; }
@@ -459,25 +463,6 @@ const articleSchema = JSON.stringify({
 </style>
 
 <script>
-  // ════════════════════════════════════════════════════════════════
-  // ✅ FIX 1 — DOUBLE COMMENT BUG ROOT CAUSE:
-  //    පැරණි code එකේ `astro:page-load` listener එකක් register කරලා
-  //    පස්සේ DOMContentLoaded / direct call ද කළා.
-  //    Astro View Transitions ඇති විට astro:page-load fire වෙන විට
-  //    already initCommentSystem() call වෙලා ඇති — ඒ නිසා submitBtn
-  //    එකට event listener දෙකක් bind වෙනවා → comment දෙකක් submit.
-  //
-  //    FIX: __commentSystemInit guard එක REMOVE කර, ඒ වෙනුවට
-  //    initCommentSystem() ඇතුළේම submitBtn එකේ prior listeners
-  //    clone-replace pattern එකෙන් clear කරනවා. ඒ නිසා කී වතාවක්
-  //    init call වුණත් listener duplicate නොවෙයි.
-  //
-  // ✅ NOTE — EDIT & DELETE:
-  //    Requirements අනුව edit සහ delete functionality සම්පූර්ණයෙන්
-  //    ඉවත් කර ඇත. Comment submit කළ පසු වෙනස් කිරීමට හෝ
-  //    මැකීමට නොහැකිය — permanent record.
-  // ════════════════════════════════════════════════════════════════
-
   function getSessionToken(): string {
     let token = sessionStorage.getItem("wk-session-token");
     if (!token) {
@@ -513,7 +498,8 @@ const articleSchema = JSON.stringify({
       if (i >= fullText.length) {
         clearInterval(interval);
         warningTypewriterDone = true;
-        // cursor blink කරනවා නමුත් hide නොකරමු — natural feel
+        // ✅ FIX: typewriter ඉවර වූ පසු cursor සම්පූර්ණයෙන් hide කරනවා
+        if (cursor) cursor.classList.add("done");
       }
     }, 28);
   }
@@ -528,7 +514,6 @@ const articleSchema = JSON.stringify({
     const validationMsg = document.getElementById("cf-validation-msg");
     const successToast = document.getElementById("comment-success-toast");
 
-    // reset typewriter flag on page navigation
     warningTypewriterDone = false;
 
     const postId = modal?.getAttribute("data-post-id") ?? "";
@@ -538,7 +523,6 @@ const articleSchema = JSON.stringify({
 
     let commentsList: Array<{ id: string; content: string; date: string; ownerToken: string; serverId?: string }> = [];
 
-    // ── FIX 1: Clone-replace pattern — prior event listeners clear කරනවා ──
     function freshEl<T extends HTMLElement>(id: string): T | null {
       const el = document.getElementById(id);
       if (!el) return null;
@@ -550,8 +534,6 @@ const articleSchema = JSON.stringify({
     const submitBtn = freshEl<HTMLButtonElement>("cf-submit-comment");
     const textarea = freshEl<HTMLTextAreaElement>("cf-comment-text");
     const clearBtn = freshEl<HTMLButtonElement>("cf-clear-btn");
-
-    // ── HELPERS ────────────────────────────────────────────────
 
     function generateId(): string {
       return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -574,8 +556,6 @@ const articleSchema = JSON.stringify({
       }, 3000);
     }
 
-    // ── CLEAR BUTTON ──────────────────────────────────────────
-
     textarea?.addEventListener("input", () => {
       const len = textarea.value.length;
       if (charCount) charCount.textContent = `${len} / 1000`;
@@ -591,9 +571,6 @@ const articleSchema = JSON.stringify({
       clearBtn.classList.add("hidden");
       textarea?.focus();
     });
-
-    // ── RENDER COMMENT CARD ────────────────────────────────────
-    // Edit/Delete buttons සම්පූර්ණයෙන් ඉවත් කර ඇත
 
     function renderCommentCard(
       id: string,
@@ -636,13 +613,10 @@ const articleSchema = JSON.stringify({
       }
     }
 
-    // ── LOAD COMMENTS ──────────────────────────────────────────
-
     async function loadComments() {
       if (!commentsListHook || !postId || !API_URL) return;
       if (noCommentsMsg) {
         noCommentsMsg.style.display = "";
-        // restore loading bars markup
         noCommentsMsg.innerHTML =
           '<p class="text-sm text-white/50 italic mb-3">කමෙන්ට්ස් ලෝඩ් වෙමින් පවතී...</p>' +
           '<div class="loading-bars-wrap" aria-hidden="true">' +
@@ -691,16 +665,16 @@ const articleSchema = JSON.stringify({
       }
     }
 
-    // ── MODAL OPEN/CLOSE ────────────────────────────────────────
-
     function openModal() {
       if (!modal || !floatingBtn) return;
       modal.classList.remove("hidden");
       requestAnimationFrame(() => modal.classList.remove("opacity-0", "pointer-events-none"));
       floatingBtn.setAttribute("aria-expanded", "true");
       loadComments();
-      // typewriter fires every time modal opens (fresh experience)
       warningTypewriterDone = false;
+      // cursor .done class ඉවත් කරනවා — නැවත animate වෙන්නට
+      const cursor = document.getElementById("warning-cursor");
+      if (cursor) cursor.classList.remove("done");
       setTimeout(runWarningTypewriter, 400);
     }
 
@@ -719,8 +693,6 @@ const articleSchema = JSON.stringify({
         if (modal && !modal.classList.contains("hidden")) closeModal();
       }
     });
-
-    // ── SUBMIT COMMENT ──────────────────────────────────────────
 
     let isSubmitting = false;
 

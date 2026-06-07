@@ -1,5 +1,3 @@
-
----
 import Share from "@/components/Share.astro";
 import SimilarPosts from "@/layouts/components/SimilarPosts.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
@@ -34,6 +32,17 @@ const authorName = allAuthors.find((a) =>
   authors.map((au: string) => slugify(au)).includes(slugify(a.data.title))
 )?.data.title ?? "Wala Katha";
 
+// SEO: BreadcrumbList Schema
+const breadcrumbSchema = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
+    { "@type": "ListItem", "position": 2, "name": categories?.[0] ? humanize(categories[0]) : "Posts", "item": `${siteUrl}/categories/${slugify(categories?.[0] ?? "posts")}` },
+    { "@type": "ListItem", "position": 3, "name": title, "item": postUrl },
+  ],
+});
+
 const articleSchema = JSON.stringify({
   "@context": "https://schema.org",
   "@type": "Article",
@@ -48,6 +57,10 @@ const articleSchema = JSON.stringify({
     "@type": "Organization",
     "name": "Wala Katha",
     "url": siteUrl,
+    "logo": {
+      "@type": "ImageObject",
+      "url": `${siteUrl}/images/logo.png`,
+    },
   },
   "datePublished": date ? new Date(date).toISOString() : undefined,
   "dateModified": date ? new Date(date).toISOString() : undefined,
@@ -58,6 +71,8 @@ const articleSchema = JSON.stringify({
   "keywords": tags?.join(", ") ?? "",
   "articleSection": categories?.map((c: string) => humanize(c)).join(", ") ?? "",
   "inLanguage": "si",
+  "wordCount": undefined,
+  "commentCount": undefined,
 });
 ---
 
@@ -74,9 +89,12 @@ const articleSchema = JSON.stringify({
 <meta property="og:description" content={description ?? title} />
 <meta property="og:url" content={postUrl} />
 {image && <meta property="og:image" content={`${siteUrl}${image}`} />}
+{image && <meta property="og:image:alt" content={title} />}
 <meta property="og:locale" content="si_LK" />
 <meta property="og:site_name" content="Wala Katha" />
 {date && <meta property="article:published_time" content={new Date(date).toISOString()} />}
+{date && <meta property="article:modified_time" content={new Date(date).toISOString()} />}
+<meta property="article:author" content={authorName} />
 {categories?.map((c: string) => <meta property="article:section" content={humanize(c)} />)}
 {tags?.map((t: string) => <meta property="article:tag" content={humanize(t)} />)}
 
@@ -85,9 +103,13 @@ const articleSchema = JSON.stringify({
 <meta name="twitter:title" content={title} />
 <meta name="twitter:description" content={description ?? title} />
 {image && <meta name="twitter:image" content={`${siteUrl}${image}`} />}
+{image && <meta name="twitter:image:alt" content={title} />}
+<meta name="twitter:site" content="@WalaKatha" />
 
 <!-- Article Structured Data (JSON-LD) -->
 <script type="application/ld+json" set:html={articleSchema} />
+<!-- BreadcrumbList Structured Data (JSON-LD) -->
+<script type="application/ld+json" set:html={breadcrumbSchema} />
 
 <section class="section bg-[#010203] relative">
   <div class="container">
@@ -272,6 +294,25 @@ const articleSchema = JSON.stringify({
           </div>
         </div>
 
+        {/* ✨ ANIMATED TYPING NOTICE — submit button යටින්, Recent Comments ට උඩින් */}
+        <div class="comment-typing-notice rounded-2xl border border-[#01AD9F]/20 bg-gradient-to-br from-[#01AD9F]/5 via-[#010f0e] to-[#010203] px-5 py-4 mb-3 relative overflow-hidden" role="note" aria-label="Comment guidelines">
+          {/* Subtle glow top bar */}
+          <div class="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#01AD9F]/60 to-transparent rounded-t-2xl"></div>
+          <div class="flex items-start gap-3">
+            {/* Animated icon */}
+            <span class="shrink-0 mt-0.5 w-8 h-8 rounded-xl bg-[#01AD9F]/10 border border-[#01AD9F]/20 flex items-center justify-center" aria-hidden="true">
+              <svg class="w-4 h-4 fill-[#01AD9F]" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="text-[11px] font-black text-[#01AD9F] uppercase tracking-widest mb-1.5">Comment Guidelines</p>
+              {/* Typing animated text container */}
+              <p id="typing-notice-text" class="text-[12.5px] leading-relaxed text-white/60 font-medium min-h-[3.5rem]" aria-live="polite"></p>
+              {/* Blinking cursor */}
+              <span id="typing-cursor" class="inline-block w-[2px] h-[14px] bg-[#01AD9F] align-middle ml-0.5 typing-cursor-blink" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
+
         {/* ⚠️ PERMANENT WARNING NOTICE */}
         <div class="comment-warning-notice rounded-xl border border-red-500/30 bg-[#0a0000] px-4 py-3 mb-2" role="alert" aria-live="polite">
           <div class="flex items-start gap-2.5">
@@ -300,9 +341,15 @@ const articleSchema = JSON.stringify({
             aria-live="polite"
             aria-label="Comments list"
           >
-            <p id="no-comments-msg" class="text-sm text-white/50 italic py-2 text-center">
-              කමෙන්ට්ස් ලෝඩ් වෙමින් පවතී...
-            </p>
+            {/* ✨ LOADING STATE — animated skeleton bars */}
+            <div id="no-comments-msg" class="py-3">
+              <p class="text-sm text-white/50 italic text-center mb-3">කමෙන්ට්ස් ලෝඩ් වෙමින් පවතී...</p>
+              <div class="space-y-2" aria-hidden="true">
+                <div class="comment-skeleton-bar h-2 rounded-full bg-white/[0.06] w-full"></div>
+                <div class="comment-skeleton-bar h-2 rounded-full bg-white/[0.06] w-4/5" style="animation-delay: 0.15s"></div>
+                <div class="comment-skeleton-bar h-2 rounded-full bg-white/[0.06] w-3/5" style="animation-delay: 0.3s"></div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -394,6 +441,42 @@ const articleSchema = JSON.stringify({
   .warning-text-glow {
     text-shadow: 0 0 12px rgba(239,68,68,0.18);
   }
+
+  /* ✨ TYPING CURSOR BLINK */
+  .typing-cursor-blink {
+    animation: tcursor 0.75s step-end infinite;
+    border-radius: 1px;
+  }
+  @keyframes tcursor {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* ✨ COMMENT TYPING NOTICE panel */
+  .comment-typing-notice {
+    backdrop-filter: blur(8px);
+    transition: box-shadow 0.3s ease;
+  }
+  .comment-typing-notice:hover {
+    box-shadow: 0 0 0 1px rgba(1,173,159,0.25), 0 4px 24px rgba(1,173,159,0.06);
+  }
+
+  /* ✨ SKELETON LOADING BARS */
+  .comment-skeleton-bar {
+    animation: cskeletonpulse 1.6s ease-in-out infinite;
+    background: linear-gradient(
+      90deg,
+      rgba(255,255,255,0.04) 0%,
+      rgba(1,173,159,0.12) 50%,
+      rgba(255,255,255,0.04) 100%
+    );
+    background-size: 200% 100%;
+    animation: cskeletonslide 1.6s ease-in-out infinite;
+  }
+  @keyframes cskeletonslide {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
 </style>
 
 <script>
@@ -426,6 +509,73 @@ const articleSchema = JSON.stringify({
   }
 
   const SESSION_TOKEN = getSessionToken();
+
+  // ── TYPING ANIMATION ────────────────────────────────────────────
+  // Comment section open වූ විට real-time type-in effect දෙනවා
+
+  const TYPING_MESSAGES = [
+    "ඔබේ අදහස් නිදහසේ share කරන්න. ❤️",
+    "links දැමීමෙන් වළකින්න — guidelines follow කරන්න.",
+    "ගරු සම්පන්නව සිටීම ඔබේ comment වල quality높이නවා.",
+    "ඔබේ comment community එකට ශක්තියක් වෙනවා! 💬",
+  ];
+
+  let typingTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  let typingMsgIndex = 0;
+  let typingCharIndex = 0;
+  let isDeleting = false;
+
+  function runTypingAnimation() {
+    const el = document.getElementById("typing-notice-text");
+    if (!el) return;
+
+    const currentMsg = TYPING_MESSAGES[typingMsgIndex];
+
+    if (!isDeleting) {
+      // Typing forward
+      typingCharIndex++;
+      el.textContent = currentMsg.slice(0, typingCharIndex);
+
+      if (typingCharIndex === currentMsg.length) {
+        // Pause at end, then start deleting
+        typingTimeoutId = setTimeout(() => {
+          isDeleting = true;
+          runTypingAnimation();
+        }, 2400);
+        return;
+      }
+      typingTimeoutId = setTimeout(runTypingAnimation, 45);
+    } else {
+      // Deleting
+      typingCharIndex--;
+      el.textContent = currentMsg.slice(0, typingCharIndex);
+
+      if (typingCharIndex === 0) {
+        isDeleting = false;
+        typingMsgIndex = (typingMsgIndex + 1) % TYPING_MESSAGES.length;
+        typingTimeoutId = setTimeout(runTypingAnimation, 350);
+        return;
+      }
+      typingTimeoutId = setTimeout(runTypingAnimation, 22);
+    }
+  }
+
+  function startTypingAnimation() {
+    if (typingTimeoutId) clearTimeout(typingTimeoutId);
+    typingMsgIndex = 0;
+    typingCharIndex = 0;
+    isDeleting = false;
+    const el = document.getElementById("typing-notice-text");
+    if (el) el.textContent = "";
+    typingTimeoutId = setTimeout(runTypingAnimation, 600);
+  }
+
+  function stopTypingAnimation() {
+    if (typingTimeoutId) clearTimeout(typingTimeoutId);
+    typingTimeoutId = null;
+  }
+
+  // ── MAIN INIT ──────────────────────────────────────────────────
 
   function initCommentSystem() {
     const floatingBtn = document.getElementById("comment-floating-btn");
@@ -546,10 +696,20 @@ const articleSchema = JSON.stringify({
 
     async function loadComments() {
       if (!commentsListHook || !postId || !API_URL) return;
+
+      // Show loading state with skeleton bars
       if (noCommentsMsg) {
         noCommentsMsg.style.display = "";
-        noCommentsMsg.textContent = "කමෙන්ට්ස් ලෝඩ් වෙමින් පවතී...";
+        noCommentsMsg.innerHTML = `
+          <p class="text-sm text-white/50 italic text-center mb-3">කමෙන්ට්ස් ලෝඩ් වෙමින් පවතී...</p>
+          <div class="space-y-2" aria-hidden="true">
+            <div class="comment-skeleton-bar h-2 rounded-full w-full"></div>
+            <div class="comment-skeleton-bar h-2 rounded-full w-4/5" style="animation-delay:0.15s"></div>
+            <div class="comment-skeleton-bar h-2 rounded-full w-3/5" style="animation-delay:0.3s"></div>
+          </div>
+        `;
       }
+
       Array.from(commentsListHook.children).forEach((child) => {
         if ((child as HTMLElement).id !== "no-comments-msg") child.remove();
       });
@@ -572,14 +732,14 @@ const articleSchema = JSON.stringify({
         } else {
           if (noCommentsMsg) {
             noCommentsMsg.style.display = "";
-            noCommentsMsg.textContent = "තවම කමෙන්ට්ස් කිසිවක් නැත. පළමුවැන්නා වන්න!";
+            noCommentsMsg.innerHTML = `<p class="text-sm text-white/50 italic py-2 text-center">තවම කමෙන්ට්ස් කිසිවක් නැත. පළමුවැන්නා වන්න!</p>`;
           }
         }
       } catch (err) {
         console.error("Comments fetch error:", err);
         if (noCommentsMsg) {
           noCommentsMsg.style.display = "";
-          noCommentsMsg.textContent = "කමෙන්ට්ස් ලෝඩ් කිරීමට අසමත් වුණා. නැවත උත්සාහ කරන්න.";
+          noCommentsMsg.innerHTML = `<p class="text-sm text-white/50 italic py-2 text-center">කමෙන්ට්ස් ලෝඩ් කිරීමට අසමත් වුණා. නැවත උත්සාහ කරන්න.</p>`;
         }
       }
     }
@@ -591,6 +751,7 @@ const articleSchema = JSON.stringify({
       modal.classList.remove("hidden");
       requestAnimationFrame(() => modal.classList.remove("opacity-0", "pointer-events-none"));
       floatingBtn.setAttribute("aria-expanded", "true");
+      startTypingAnimation();
       loadComments();
     }
 
@@ -598,6 +759,7 @@ const articleSchema = JSON.stringify({
       if (!modal || !floatingBtn) return;
       modal.classList.add("opacity-0", "pointer-events-none");
       floatingBtn.setAttribute("aria-expanded", "false");
+      stopTypingAnimation();
       setTimeout(() => modal.classList.add("hidden"), 300);
     }
 

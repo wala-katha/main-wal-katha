@@ -1,36 +1,44 @@
-// similer products
-const similerItems = (currentItem: any, allItems: any, slug: string) => {
-  let categories: [] = [];
-  let tags: [] = [];
+// similar products / posts
+const similarItems = (currentItem: any, allItems: any, slug: string) => {
+  // 1. ස්වයංක්‍රීය නිවැරදි කිරීම (Auto-Fix): දත්ත හිස් හෝ වැරදි නම් බිඳ වැටෙන්නේ නැතිව හිස් Array එකක් ලබා දේ
+  if (!currentItem?.data || !Array.isArray(allItems)) {
+    return [];
+  }
 
-  // set categories
-  if (currentItem.data.categories.length > 0) {
+  let categories: string[] = [];
+  let tags: string[] = [];
+
+  // Categories ආරක්ෂිතව ලබා ගැනීම
+  if (Array.isArray(currentItem.data.categories)) {
     categories = currentItem.data.categories;
   }
 
-  // set tags
-  if (currentItem.data.tags.length > 0) {
+  // Tags ආරක්ෂිතව ලබා ගැනීම
+  if (Array.isArray(currentItem.data.tags)) {
     tags = currentItem.data.tags;
   }
 
-  // filter by categories
-  const filterByCategories = allItems.filter(
-    (item: { data: { categories: string } }) =>
-      categories.find((category) => item.data.categories.includes(category))
-  );
+  // 2. Categories අනුව Filter කිරීම (ආරක්ෂිතව)
+  const filterByCategories = allItems.filter((item: any) => {
+    if (!item?.data?.categories || !Array.isArray(item.data.categories)) return false;
+    return categories.some((category) => item.data.categories.includes(category));
+  });
 
-  // filter by tags
-  const filterByTags = allItems.filter((item: { data: { tags: string } }) =>
-    tags.find((tag) => item.data.tags.includes(tag))
-  );
+  // 3. Tags අනුව Filter කිරීම (ආරක්ෂිතව)
+  const filterByTags = allItems.filter((item: any) => {
+    if (!item?.data?.tags || !Array.isArray(item.data.tags)) return false;
+    return tags.some((tag) => item.data.tags.includes(tag));
+  });
 
-  // merged after filter
+  // එකම ලිපිය දෙපාරක් එකතු වීම වැළැක්වීම (Merge & De-duplicate)
   const mergedItems = [...new Set([...filterByCategories, ...filterByTags])];
 
-  // filter by slug
-  const filterBySlug = mergedItems.filter((product) => product.slug !== slug);
+  // දැනට කියවන ලිපිය (Current Post) ලැයිස්තුවෙන් ඉවත් කිරීම
+  const filterBySlug = mergedItems.filter((item: any) => item.slug !== slug);
 
-  return filterBySlug;
+  // 4. උපරිම ප්‍රතිඵල ගණන සීමා කිරීම (SEO සහ Page Speed සඳහා)
+  // බ්ලොග් අඩවියක Related Posts ලෙස පෙන්වීමට උපරිම ලිපි 3ක් හෝ 4ක් ප්‍රමාණවත්ය
+  return filterBySlug.slice(0, 4);
 };
 
-export default similerItems;
+export default similarItems;

@@ -8,14 +8,15 @@ import { sortByDate } from "@/lib/utils/sortFunctions";
 
 export async function getStaticPaths() {
   const authors = await getSinglePage("authors");
-  const paginationLimit = config.settings.pagination || 8;
-  const totalPages = Math.ceil(authors.length / paginationLimit);
+  const paginationLimit = config?.settings?.pagination || 8;
+  const totalPages = Math.ceil((authors?.length || 0) / paginationLimit);
   
-  // මුළු පිටු ගණන 0 වුවහොත් අවම වශයෙන් පළමු පිටුව සඳහා Build එක සිදුවීමට ඉඩ සලසයි
   const safeTotalPages = totalPages < 1 ? 1 : totalPages;
   const paths = [];
 
-  for (let i = 1; i <= safeTotalPages; i++) {
+  // SEO ප්‍රශස්තකරණය: පළමු පිටුව (Page 1) සඳහා slug එකක් සෑදීම මඟහරින්න.
+  // මන්ද පළමු පිටුව කෙලින්ම /authors/ පිටුවෙන් ක්‍රියාත්මක වන බැවිනි.
+  for (let i = 2; i <= safeTotalPages; i++) {
     paths.push({
       params: {
         slug: i.toString(),
@@ -29,16 +30,16 @@ const { slug } = Astro.params;
 const authors = await getSinglePage("authors");
 const sortedPosts = sortByDate(authors);
 
-const paginationLimit = config.settings.pagination || 8;
-const totalPages = Math.ceil(authors.length / paginationLimit);
+const paginationLimit = config?.settings?.pagination || 8;
+const totalPages = Math.ceil((authors?.length || 0) / paginationLimit);
 const safeTotalPages = totalPages < 1 ? 1 : totalPages;
 
-// 1. ස්වයංක්‍රීය නිවැරදි කිරීම (Auto-Fix): 
-let currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
+// 1. ස්වයංක්‍රීය නිවැරදි කිරීම (Auto-Fix): මෙම පිටුව සැමවිටම Page 2 හෝ ඊට ඉහළ විය යුතුය
+let currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 2;
 if (currentPage > safeTotalPages) {
   currentPage = safeTotalPages;
-} else if (currentPage < 1) {
-  currentPage = 1;
+} else if (currentPage < 2) {
+  currentPage = 2;
 }
 
 const indexOfLastPost = currentPage * paginationLimit;
@@ -50,26 +51,33 @@ const metaTitle = `අපේ ලේඛකයින් - Our Authors | Page ${cur
 const metaDescription = `අපේ වෙබ් අඩවියේ ලිපි ලියන දක්ෂ කතෘවරුන් සහ ලේඛකයින් මෙතැනින් එකම තැනකින් සොයා ගන්න. (පිටුව ${currentPage})`;
 
 // 3. SEO Canonical URL නිවැරදි කිරීම (Auto-Fix): 
-// පළමු පිටුව නම් ප්‍රධාන පිටුවටම ලින්ක් එක ලබා දේ (Duplicate Content මඟහරවයි)
-const base_url = config.site.base_url.replace(/\/$/, ""); // අගට ඇති / ඉවත් කිරීම
-const canonicalUrl = currentPage === 1 
-  ? `${base_url}/authors` 
-  : `${base_url}/authors/page/${currentPage}`;
+const base_url = (config?.site?.base_url || "").replace(/\/$/, ""); 
+const canonicalUrl = `${base_url}/authors/page/${currentPage}`;
+
+// 4. SEO Pagination Link Headers (Google Bot හට පිටු හඳුනා ගැනීමට):
+const prevUrl = currentPage === 2 ? `${base_url}/authors` : `${base_url}/authors/page/${currentPage - 1}`;
+const nextUrl = currentPage < safeTotalPages ? `${base_url}/authors/page/${currentPage + 1}` : null;
 ---
 
 <Base title={metaTitle} description={metaDescription} canonical={canonicalUrl}>
+  {/* CRITICAL FIX: Astro වල slots පාවිච්චි කරන්නේ සාමාන්‍ය HTML Elements සමඟ පමණි. 
+    <link> ටැග් කෙලින්ම යෙදීමෙන් බිල්ඩ් එක ආරක්ෂා වේ.
+  */}
+  {prevUrl && <link rel="prev" href={prevUrl} slot="head" />}
+  {nextUrl && <link rel="next" href={nextUrl} slot="head" />}
+
   {/* කළු පසුබිමට ගැළපෙන සහ කියවීමේ පහසුව උපරිම කළ CSS ව්‍යුහය */}
   <section class="section bg-slate-950 py-12 min-h-screen text-slate-100">
     <div class="container mx-auto px-4">
       
       {/* හෙඩිම කළු පසුබිමේ රන්වන් සහ සුදු පැහැයෙන් ඉස්මතු කිරීම */}
-      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-center mb-12">
-        Our <span class="text-amber-400">Authors</span>
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-center mb-12 text-white">
+        Our <span class="text-amber-400 drop-shadow-[0_2px_8px_rgba(251,191,36,0.2)]">Authors</span>
       </h1>
       
       {/* ලේඛකයින්ගේ ලැයිස්තුව (Component) */}
       <div class="mb-12">
-        {currentPosts.length > 0 ? (
+        {currentPosts && currentPosts.length > 0 ? (
           <Authors authors={currentPosts} />
         ) : (
           <p class="text-slate-400 text-center py-8">කතෘවරුන් කිසිවෙකු හමුනොවීය.</p>

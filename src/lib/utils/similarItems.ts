@@ -36,9 +36,9 @@ const similarItems = (currentItem: any, allItems: any, slug: string) => {
   // දැනට කියවන ලිපිය (Current Post) ලැයිස්තුවෙන් ඉවත් කිරීම
   const filterBySlug = mergedItems.filter((item: any) => item.slug !== slug);
 
-  // 4. උපරිම ප්‍රතිඵල ගණන සීමා කිරීම (SEO සහ Page Speed සඳහා)
-  // බ්ලොග් අඩවියක Related Posts ලෙස පෙන්වීමට උපරිම ලිපි 3ක් හෝ 4ක් ප්‍රමාණවත්ය
-  return filterBySlug.slice(0, 4);
+  // 4. පින්තූරයේ පෙනෙන සුපිරි Layout එකට ගැළපෙන ලෙස උපරිම ප්‍රතිඵල ගණන 6කට සීමා කිරීම 
+  // (වෙනත් ෆයිල් වෙනස් කිරීමට අවශ්‍ය නොවේ, පරස්පරතා මඟහැරේ)
+  return filterBySlug.slice(0, 6);
 };
 
 export default similarItems;

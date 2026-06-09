@@ -1,34 +1,86 @@
-
 ---
 import { getSinglePage } from "@/lib/contentParser.astro";
 import { slugify } from "@/lib/utils/textConverter";
 
-// get taxonomy from frontmatter
-export const getTaxonomy = async (collection: any, name: string) => {
-  const singlePages = await getSinglePage(collection);
-  const taxonomyPages = singlePages.map((page: any) => page.data[name]);
-  let taxonomies: string[] = [];
-  for (let i = 0; i < taxonomyPages.length; i++) {
-    const categoryArray = taxonomyPages[i];
-    for (let j = 0; j < categoryArray.length; j++) {
-      taxonomies.push(slugify(categoryArray[j])!);
-    }
+/**
+ * වෙබ් අඩවියේ ඇති සියලුම ලිපිවල අඩංගු සමස්ත Categories/Tags ප්‍රමාණය ආරක්ෂිතව ලබා දේ.
+ * (සියලුම ශ්‍රිත සඳහා පොදු පාදක එන්ජිමයි)
+ */
+export const getAllTaxonomy = async (collection: any, name: string) => {
+  try {
+    const singlePages = await getSinglePage(collection);
+    if (!singlePages || !Array.isArray(singlePages)) return [];
+
+    let taxonomies: string[] = [];
+
+    singlePages.forEach((page: any) => {
+      const categoryArray = page?.data?.[name];
+      if (Array.isArray(categoryArray)) {
+        categoryArray.forEach((item: string) => {
+          // ස්වයංක්‍රීය නිවැරදි කිරීම: හිස් නොවන සහ String අගයන් පමණක් ලබා ගනී
+          if (item && typeof item === "string") {
+            const slugified = slugify(item.trim());
+            if (slugified) taxonomies.push(slugified);
+          }
+        });
+      }
+    });
+
+    return taxonomies;
+  } catch (error) {
+    console.error(`Error in getAllTaxonomy for ${name}:`, error);
+    return [];
   }
-  const taxonomy = [...new Set(taxonomies)];
-  return taxonomy;
 };
 
-// get all taxonomies from frontmatter
-export const getAllTaxonomy = async (collection: any, name: string) => {
-  const singlePages = await getSinglePage(collection);
-  const taxonomyPages = singlePages.map((page: any) => page.data[name]);
-  let taxonomies: string[] = [];
-  for (let i = 0; i < taxonomyPages.length; i++) {
-    const categoryArray = taxonomyPages[i];
-    for (let j = 0; j < categoryArray.length; j++) {
-      taxonomies.push(slugify(categoryArray[j])!);
-    }
+/**
+ * අද්විතීය (Unique) Categories/Tags ලැයිස්තුවක් පමණක් ආරක්ෂිතව ලබා දේ.
+ * (SEO Sitemap සහ ප්‍රධාන පිටුවල ලැයිස්තු සඳහා 100% ක් වැදගත් වේ)
+ */
+export const getTaxonomy = async (collection: any, name: string) => {
+  try {
+    const allTaxonomies = await getAllTaxonomy(collection, name);
+    return [...new Set(allTaxonomies)];
+  } catch (error) {
+    console.error(`Error in getTaxonomy for ${name}:`, error);
+    return [];
   }
-  return taxonomies;
+};
+
+/**
+ * ⚡ අලුතින් එකතු කළ සුපිරි ශ්‍රිතය (Post Count Function):
+ * Categories/Tags සමඟ ඒවාට අදාළ ලිපි ගණන (Post Count) එකවර ලබා දේ.
+ * වැඩිම ලිපි ගණනක් ඇති ටැග්/ප්‍රවර්ග ස්වයංක්‍රීයවම මුලට පැමිණේ.
+ */
+export const getTaxonomyWithCount = async (collection: any, name: string) => {
+  try {
+    const allTaxonomies = await getAllTaxonomy(collection, name);
+    if (!allTaxonomies || allTaxonomies.length === 0) return [];
+    
+    // සෑම ටැග් එකක්ම කොපමණ වාර ගණනක් තිබේදැයි ගණන් කිරීම
+    const countMap = allTaxonomies.reduce((acc: Record<string, number>, curr: string) => {
+      acc[curr] = (acc[curr] || 0) + 1;
+      return acc;
+    }, {});
+
+    // දත්ත ලැයිස්තුවක් ලෙස සකසා වැඩිම ලිපි ගණනක් ඇති ටැග් මුලට එන සේ Sort කිරීම
+    return Object.entries(countMap)
+      .map(([slug, count]) => {
+        // කළු පසුබිමක පෙන්වීමට සහ SEO සඳහා මාතෘකාව (Humanize) සකස් කිරීම
+        const displayName = slug
+          .replace(/-/g, " ")
+          .replace(/^[a-z]/, (m) => m.toUpperCase());
+
+        return {
+          name: displayName, // පෙනෙන නම (උදා: "Nava Katha")
+          slug: slug,        // ලින්ක් එක (උදා: "nava-katha")
+          count: count       // ලිපි ගණන (උදා: 12)
+        };
+      })
+      .sort((a, b) => b.count - a.count);
+  } catch (error) {
+    console.error(`Error in getTaxonomyWithCount for ${name}:`, error);
+    return [];
+  }
 };
 ---

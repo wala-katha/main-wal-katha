@@ -13,18 +13,34 @@ type PageData = {
   draft?: boolean;
 };
 
+/**
+ * අදාළ Collection එකෙන් ප්‍රකාශයට පත් කිරීමට සූදානම් පිටු පමණක් ආරක්ෂිතව ලබා දෙන ශ්‍රිතය.
+ */
 export const getSinglePage = async <C extends CollectionKey>(
   collectionName: C
 ): Promise<CollectionEntry<C>[]> => {
-  const allPages = await getCollection(collectionName);
+  try {
+    const allPages = await getCollection(collectionName);
 
-  const removeIndex = allPages.filter((data) => data.id.match(/^(?!-)/));
+    // 1. ස්වයංක්‍රීය නිවැරදි කිරීම (Auto-Fix): දත්ත කිසිවක් නැත්නම් බිඳ වැටෙන්නේ නැතිව හිස් Array එකක් ලබා දේ
+    if (!allPages || !Array.isArray(allPages)) return [];
 
-  const removeDrafts = removeIndex.filter((data) => {
-    const pageData = data.data as PageData;
-    return pageData.draft !== true;
-  });
+    // '-' ලකුණෙන් ආරම්භ වන ID ඇති (Private/Hidden) ගොනු ඉවත් කිරීම
+    const removeIndex = allPages.filter((data) => data?.id && data.id.match(/^(?!-)/));
 
-  return removeDrafts;
+    // 2. Draft ලිපි ආරක්ෂිතව ඉවත් කිරීම (Auto-Fix)
+    const removeDrafts = removeIndex.filter((data) => {
+      // යම් හෙයකින් ලිපියක දත්ත (data) කොටස සම්පූර්ණයෙන්ම නැතිනම්, එය සයිට් එක Crash කරන්නේ නැත
+      if (!data?.data) return false;
+      
+      const pageData = data.data as PageData;
+      return pageData?.draft !== true;
+    });
+
+    return removeDrafts;
+  } catch (error) {
+    console.error(`Error loading collection ${collectionName}:`, error);
+    return []; // යම් හෙයකින් ලොකු දෝෂයක් ආවොත් මුළු සයිට් එකම බිඳ නොදමා හිස් ලැයිස්තුවක් ලබා දේ
+  }
 };
 ---

@@ -1,71 +1,34 @@
+
 ---
 import { getSinglePage } from "@/lib/contentParser.astro";
 import { slugify } from "@/lib/utils/textConverter";
 
-/**
- * අද්විතීය (Unique) Categories/Tags ලැයිස්තුවක් පමණක් ආරක්ෂිතව ලබා දේ.
- * (Sitemap සහ ප්‍රධාන පිටුවල ලැයිස්තු සඳහා)
- */
+// get taxonomy from frontmatter
 export const getTaxonomy = async (collection: any, name: string) => {
-  try {
-    const singlePages = await getSinglePage(collection);
-    
-    // 1. ස්වයංක්‍රීය නිවැරදි කිරීම (Auto-Fix): ලිපි කිසිවක් නැත්නම් හිස් Array එකක් ලබා දේ
-    if (!singlePages || !Array.isArray(singlePages)) return [];
-
-    let taxonomies: string[] = [];
-
-    singlePages.forEach((page: any) => {
-      const categoryArray = page?.data?.[name];
-      
-      // 2. දත්ත Array එකක් නොවේ නම් හෝ හිස් නම් බිඳ වැටෙන්න නොදී මඟහැර යයි (Auto-Fix)
-      if (Array.isArray(categoryArray)) {
-        categoryArray.forEach((item: string) => {
-          if (item && typeof item === "string") {
-            const slugified = slugify(item);
-            if (slugified) taxonomies.push(slugified);
-          }
-        });
-      }
-    });
-
-    // එකම Category/Tag එක දෙපාරක් එන්න නොදී අද්විතීය (Unique) කිරීම
-    return [...new Set(taxonomies)];
-  } catch (error) {
-    console.error(`Error in getTaxonomy for ${name}:`, error);
-    return [];
+  const singlePages = await getSinglePage(collection);
+  const taxonomyPages = singlePages.map((page: any) => page.data[name]);
+  let taxonomies: string[] = [];
+  for (let i = 0; i < taxonomyPages.length; i++) {
+    const categoryArray = taxonomyPages[i];
+    for (let j = 0; j < categoryArray.length; j++) {
+      taxonomies.push(slugify(categoryArray[j])!);
+    }
   }
+  const taxonomy = [...new Set(taxonomies)];
+  return taxonomy;
 };
 
-/**
- * වෙබ් අඩවියේ ඇති සියලුම ලිපිවල අඩංගු සමස්ත Categories/Tags ප්‍රමාණය ආරක්ෂිතව ලබා දේ.
- * (යම් ටැග් එකක ලිපි කීයක් තිබේදැයි ගණන් කිරීමට - Count/Total)
- */
+// get all taxonomies from frontmatter
 export const getAllTaxonomy = async (collection: any, name: string) => {
-  try {
-    const singlePages = await getSinglePage(collection);
-    
-    if (!singlePages || !Array.isArray(singlePages)) return [];
-
-    let taxonomies: string[] = [];
-
-    singlePages.forEach((page: any) => {
-      const categoryArray = page?.data?.[name];
-      
-      if (Array.isArray(categoryArray)) {
-        categoryArray.forEach((item: string) => {
-          if (item && typeof item === "string") {
-            const slugified = slugify(item);
-            if (slugified) taxonomies.push(slugified);
-          }
-        });
-      }
-    });
-
-    return taxonomies;
-  } catch (error) {
-    console.error(`Error in getAllTaxonomy for ${name}:`, error);
-    return [];
+  const singlePages = await getSinglePage(collection);
+  const taxonomyPages = singlePages.map((page: any) => page.data[name]);
+  let taxonomies: string[] = [];
+  for (let i = 0; i < taxonomyPages.length; i++) {
+    const categoryArray = taxonomyPages[i];
+    for (let j = 0; j < categoryArray.length; j++) {
+      taxonomies.push(slugify(categoryArray[j])!);
+    }
   }
+  return taxonomies;
 };
 ---

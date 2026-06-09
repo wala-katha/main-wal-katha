@@ -5,17 +5,20 @@ import Base from "@/layouts/Base.astro";
 import Pagination from "@/layouts/components/Pagination.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
 import { sortByDate } from "@/lib/utils/sortFunctions";
-import { markdownify } from "@/lib/utils/textConverter";
 
 export async function getStaticPaths() {
   const authors = await getSinglePage("authors");
-  const totalPages = Math.ceil(authors.length / config.settings.pagination);
+  // ස්වයංක්‍රීය නිවැරදි කිරීම: ලේඛකයින් නොමැති නම් බිඳ වැටීම් වළක්වයි
+  const paginationLimit = config.settings.pagination || 8;
+  const totalPages = Math.ceil(authors.length / paginationLimit);
   const paths = [];
 
-  for (let i = 1; i < totalPages; i++) {
+  // ස්වයංක්‍රීය නිවැරදි කිරීම (Auto-Fix): 
+  // පරණ ලූප් එකේ තිබූ 404 බග් එක සහ පිටු මඟ හැරීමේ ගැටලුව සම්පූර්ණයෙන්ම නිවැරදි කර ඇත
+  for (let i = 1; i <= totalPages; i++) {
     paths.push({
       params: {
-        slug: (i + 1).toString(),
+        slug: i.toString(),
       },
     });
   }
@@ -25,23 +28,44 @@ export async function getStaticPaths() {
 const { slug } = Astro.params;
 const authors = await getSinglePage("authors");
 const sortedPosts = sortByDate(authors);
-const totalPages = Math.ceil(authors.length / config.settings.pagination);
+
+const paginationLimit = config.settings.pagination || 8;
+const totalPages = Math.ceil(authors.length / paginationLimit);
 const currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
-const indexOfLastPost = currentPage * config.settings.pagination;
-const indexOfFirstPost = indexOfLastPost - config.settings.pagination;
+
+const indexOfLastPost = currentPage * paginationLimit;
+const indexOfFirstPost = indexOfLastPost - paginationLimit;
 const currentPosts = sortedPosts.slice(indexOfFirstPost, indexOfLastPost);
+
+// SEO සඳහා ගැලපෙන පරිදි Meta Title එක සකසා ගැනීම
+const metaTitle = `Authors - Page ${currentPage}`;
+const metaDescription = `Discover our talented writers and content creators. Browse page ${currentPage} of our author directory.`;
 ---
 
-<Base title={"Authors"}>
-  <section class="section">
-    <div class="container text-center">
-      <h1 set:text={markdownify("Authors")} class="page-heading h2" />
-      <Authors authors={currentPosts} />
-      <Pagination
-        section={"authors"}
-        currentPage={currentPage}
-        totalPages={totalPages}
-      />
+<Base title={metaTitle} description={metaDescription}>
+  {/* කළු පසුබිමට ගැළපෙන සහ කියවීමේ පහසුව උපරිම කළ CSS ව්‍යුහය */}
+  <section class="section bg-slate-950 py-12 min-h-screen text-slate-100">
+    <div class="container mx-auto px-4 text-center">
+      
+      {/* හෙඩිම කළු පසුබිමේ රන්වන් සහ සුදු පැහැයෙන් ඉස්මතු කිරීම */}
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-8">
+        Our <span class="text-amber-400">Authors</span>
+      </h1>
+      
+      {/* ලේඛකයින්ගේ ලැයිස්තුව (Component) */}
+      <div class="mb-12">
+        <Authors authors={currentPosts} />
+      </div>
+      
+      {/* පිටු අංකනය (Pagination) */}
+      <div class="flex justify-center mt-8">
+        <Pagination
+          section={"authors"}
+          currentPage={currentPage}
+          totalPages={totalPages}
+        />
+      </div>
+      
     </div>
   </section>
 </Base>

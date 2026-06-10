@@ -82,28 +82,20 @@ const contactPageSchema = {
         </div>
         
         <div class="sm:col-7 md:col-8">
-          {/* ⚡ SMART NOTICE BOX: පණිවිඩය සාර්ථකව ලැබුණු විට පෙන්වන කොටස */}
+          {/* ⚡ SMART NOTICE BOX: පණිවිඩය සූදානම් වූ විට පෙන්වන කොටස */}
           <div id="form-success-alert" class="hidden mb-6 p-4 rounded-lg bg-emerald-500/20 border border-emerald-500 flex items-start text-emerald-400">
             <BiCheckCircle className="h-6 w-6 mr-3 flex-shrink-0 mt-0.5 text-emerald-400" />
             <div>
-              <p class="font-bold text-lg text-emerald-400">පණිවිඩය සාර්ථකව ලැබුණා!</p>
-              <p class="text-sm opacity-90 mt-1 text-emerald-300">අප හා සම්බන්ධ වීම පිළිබඳව ස්තුතියි. ඔබගේ විමසීමට හැකි ඉක්මනින් පිළිතුරු සපයන්නෙමු.</p>
+              <p class="font-bold text-lg text-emerald-400">පණිවිඩය සාර්ථකව සකස් වුණා!</p>
+              <p class="text-sm opacity-90 mt-1 text-emerald-300">අප හා සම්බන්ධ වීම පිළිබඳව ස්තුතියි. ඔබගේ විමසීම ඊමේල් යෙදවුම හරහා දැන් විවෘත වේ.</p>
             </div>
           </div>
 
-          {/* Web3Forms API Endpoint එක සෘජුවම සම්බන්ධ කර ඇත */}
+          {/* බාහිර API මත රඳා නොපවතින සෘජු ආකෘතිය */}
           <form
             id="smart-contact-form"
             class="contact-form row gy-3 justify-center"
-            method="POST"
-            action="https://api.web3forms.com/submit"
           >
-            {/* 🎯 ඔබගේ නිල Gmail ලිපිනය සෘජුවම හඳුනා ගැනීමට Access Key එකක් මෙලෙස යොදනු ලැබේ */}
-            <input type="hidden" name="access_key" value="003975ba-3b03-4f93-b68a-cf872bc9776d" />
-            <input type="hidden" name="from_name" value="Wala Katha Web Support" />
-            <input type="hidden" name="subject" value="New Contact Message from WalaKatha" />
-            <input type="checkbox" name="botcheck" class="hidden" style="display: none;" />
-
             {/* Name Input */}
             <div class="lg:col-6 relative">
               <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="name">
@@ -111,8 +103,9 @@ const contactPageSchema = {
               </label>
               <div class="relative flex items-center">
                 <input
-                  class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10 text-black placeholder-gray-400"
+                  class="form-input w-full rounded-lg bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10 text-black placeholder-gray-400"
                   style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important; background-color: #ffffff !important;"
+                  id="form-name"
                   name="name"
                   type="text"
                   required
@@ -130,8 +123,9 @@ const contactPageSchema = {
               </label>
               <div class="relative flex items-center">
                 <input
-                  class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10 text-black placeholder-gray-400"
+                  class="form-input w-full rounded-lg bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10 text-black placeholder-gray-400"
                   style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important; background-color: #ffffff !important;"
+                  id="form-email"
                   name="email"
                   type="email"
                   required
@@ -144,12 +138,13 @@ const contactPageSchema = {
 
             {/* Subject Input */}
             <div class="col-12 relative">
-              <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="custom_subject">Subject</label>
+              <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="subject">Subject</label>
               <div class="relative flex items-center">
                 <input 
-                  class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10 text-black placeholder-gray-400" 
+                  class="form-input w-full rounded-lg bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10 text-black placeholder-gray-400" 
                   style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important; background-color: #ffffff !important;"
-                  name="custom_subject" 
+                  id="form-subject"
+                  name="subject" 
                   type="text" 
                 />
                 <button type="button" class="clear-btn absolute right-3 text-gray-500 hover:text-red-500 hidden transition-all z-10">
@@ -165,8 +160,9 @@ const contactPageSchema = {
               </label>
               <div class="relative">
                 <textarea 
-                  class="form-textarea w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10 text-black placeholder-gray-400" 
+                  class="form-textarea w-full rounded-lg bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10 text-black placeholder-gray-400" 
                   style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important; background-color: #ffffff !important;"
+                  id="form-message"
                   name="message" 
                   rows="4" 
                   required
@@ -188,7 +184,7 @@ const contactPageSchema = {
     </div>
   </section>
 
-  {/* ⚡ SMART LOGIC FOR INPUT FOCUS & ACTIONS */}
+  {/* ⚡ SMART INPUT LOGIC & DIRECT EMAIL SENDING */}
   <script is:inline>
     document.addEventListener("DOMContentLoaded", () => {
       const form = document.getElementById("smart-contact-form");
@@ -196,14 +192,13 @@ const contactPageSchema = {
       const submitBtn = document.getElementById("submit-btn");
       const formContainers = document.querySelectorAll(".relative");
 
-      // 1. Inputs ලියද්දී ❌ බටන් එක පාලනය කිරීම සහ බලහත්කාරයෙන් Focus Color එක තැබීම
+      // 1. ❌ බටන් ක්‍රියාකාරීත්වය සහ වර්ණ සැකසුම්
       formContainers.forEach(container => {
         const input = container.querySelector(".form-input, .form-textarea");
         const clearBtn = container.querySelector(".clear-btn");
 
         if (!input || !clearBtn) return;
 
-        // මොබයිල් බ්‍රවුසර් වල Focus එකේදී සිදුවන වර්ණ Override වීම් වැළැක්වීම
         input.style.color = "#000000";
         input.style.backgroundColor = "#ffffff";
 
@@ -223,44 +218,43 @@ const contactPageSchema = {
         });
       });
 
-      // 2. WEB3FORMS AJAX SUBMISSION LOGIC
+      // 2. NATIVE SECURE DIRECT EMAIL HANDLING
       if (form) {
-        form.addEventListener("submit", async (e) => {
+        form.addEventListener("submit", (e) => {
           e.preventDefault();
           
           if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.textContent = "Sending...";
+            submitBtn.textContent = "Processing...";
           }
 
-          const formData = new FormData(form);
-          const object = Object.fromEntries(formData);
-          const json = JSON.stringify(object);
-          
+          const name = document.getElementById("form-name").value;
+          const email = document.getElementById("form-email").value;
+          const userSubject = document.getElementById("form-subject").value || "General Inquiry";
+          const message = document.getElementById("form-message").value;
+
+          // ඊමේල් එකෙහි අන්තර්ගතය පිළිවෙළකට සකස් කිරීම
+          const targetEmail = "walkatha.com@gmail.com";
+          const mailSubject = encodeURIComponent(`[WalaKatha Contact] ${userSubject}`);
+          const mailBody = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`);
+
+          // බාහිර සේවා බිඳවැටීම් වලින් තොර සෘජු ලින්ක් එක
+          const mailtoUrl = `mailto:${targetEmail}?subject=${mailSubject}&body=${mailBody}`;
+
           try {
-            const response = await fetch(form.action, {
-              method: form.method,
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-              },
-              body: json
-            });
-
-            const result = await response.json();
-
-            if (response.status === 200 || result.success) {
-              if (successAlert) {
-                successAlert.classList.remove("hidden");
-                successAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }
-              form.reset();
-              document.querySelectorAll(".clear-btn").forEach(btn => btn.classList.add("hidden"));
-            } else {
-              alert(result.message || "පණිවිඩය යැවීමේදී ගැටලුවක් ඇතිවිය.");
+            // පණිවිඩය සූදානම් බව පෙන්වා පද්ධතිය ක්‍රියාත්මක කිරීම
+            if (successAlert) {
+              successAlert.classList.remove("hidden");
+              successAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
+            
+            // පරිශීලකයාගේ නිල ඊමේල් මෘදුකාංගය විවෘත කිරීම
+            window.location.href = mailtoUrl;
+            
+            form.reset();
+            document.querySelectorAll(".clear-btn").forEach(btn => btn.classList.add("hidden"));
           } catch (error) {
-            alert("ජාල සම්බන්ධතා දෝෂයක්. කරුණාකර අන්තර්ජාලය පරීක්ෂා කරන්න.");
+            alert("Error preparing email connection.");
           } finally {
             if (submitBtn) {
               submitBtn.disabled = false;

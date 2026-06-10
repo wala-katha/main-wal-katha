@@ -131,23 +131,30 @@ const homePageSchema = {
       color: #050505 !important;
       border-color: #10b981 !important;
     }
+
+    /* 🔥 ADDITIONAL DARK HIGHLIGHTS FOR SLIDER & TAGS */
+    :global(.featured-slider .slider-content) {
+      background: linear-gradient(to top, rgba(5,5,5,0.95) 0%, rgba(5,5,5,0.4) 70%, transparent 100%) !important;
+    }
+    :global(.tag), :global(.category-badge) {
+      background-color: #164e63/30 !important;
+      color: #22d3ee !important;
+      border: 1px solid rgba(34, 211, 238, 0.2) !important;
+    }
   </style>
 
   {/* පසුබිම් තීම් එක සහ සිලෙක්ෂන් කලර්ස් */}
-  <section class="section pt-6 pb-12 min-h-screen bg-[#050505] text-slate-200 selection:bg-emerald-500 selection:text-neutral-950 tracking-wide leading-relaxed antialiased">
+  <section class="section pt-4 pb-12 min-h-screen bg-[#050505] text-slate-200 selection:bg-emerald-500 selection:text-neutral-950 tracking-wide leading-relaxed antialiased">
     <div class="container">
       
-      {/* 🚀 PERFECT SEO TITLE BLOCK */}
-      <div class="text-center mb-8 border-b border-neutral-900/60 pb-6">
-        <h1 class="main-glowing-title block text-2xl md:text-4xl font-extrabold bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 bg-clip-text text-transparent drop-shadow-[0_2px_20px_rgba(16,185,129,0.25)] transition-colors duration-200 select-text tracking-wider">
-          සිංහල වල් කතා
-        </h1>
-        <p class="text-xs md:text-sm text-neutral-400 mt-2 block font-medium opacity-90">
-          Sinhala Wal Katha & Wela Katha Stories - නවතම කතා එකතුව
-        </p>
+      {/* 🚀 PERFECT SEO HIDDEN BLOCK: 
+          පරිශීලකයාට පිටුව ඇතුළත දර්ශනය නොවේ, නමුත් Google බොට්ස් ලා H1 මාතෘකාව සම්පූර්ණයෙන්ම කියවයි. */}
+      <div class="sr-only">
+        <h1>සිංහල වල් කතා</h1>
+        <p>Sinhala Wal Katha & Wela Katha Stories - නවතම කතා එකතුව</p>
       </div>
 
-      {/* Slider එක */}
+      {/* Slider එක (දැන් මෙය සයිට් එකේ ඉහළින්ම පිරිසිදුව දිස්වේ) */}
       <FeaturedSlider posts={sortedPosts} />
 
       {/* ප්‍රධාන පෝස්ට් ග්‍රිඩ් එක */}

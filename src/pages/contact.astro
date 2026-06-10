@@ -4,96 +4,141 @@ import Base from "@/layouts/Base.astro";
 import { markdownify } from "@/lib/utils/textConverter";
 import type { CollectionEntry } from "astro:content";
 import { getEntry } from "astro:content";
-import { FaAddressCard, FaEnvelope, FaPhoneAlt } from "react-icons/fa";
+import { BiSpreadsheet, BiEnvelope, BiPhoneCall } from "react-icons/bi"; // ⚡ UI Consistent එකක් සඳහා වෙනත් පිටුවල ඇති පරිදි Bi ශ්‍රිතයේ අයිකන භාවිතය
 
 const entry = (await getEntry(
   "contact",
   "-index"
 )) as CollectionEntry<"contact">;
+
+// 1. ස්වයංක්‍රීය නිවැරදි කිරීම (Auto-Fix): දත්ත හිස් නම් සයිට් එක ක්‍රෑෂ් වීම වළක්වයි
+if (!entry || !entry.data) {
+  return Astro.redirect("/404");
+}
+
 const { contact_form_action } = config.params;
 const { address, email, phone } = config.contactinfo;
 const { title, description, meta_title, image } = entry.data;
+
+// 📈 2. SEO ප්‍රශස්තකරණය: පිරිසිදු Canonical URL එකක් සැකසීම
+const base_url = (config?.site?.base_url || "").replace(/\/$/, ""); 
+const canonicalUrl = `${base_url}/contact`;
+
+// 🚀 GOOGLE SEO CONTACTPAGE SCHEMA: සෙවුම් යන්ත්‍ර වලට සම්බන්ධතා තොරතුරු නිවැරදිව දීමට (JSON-LD)
+const contactPageSchema = {
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  "name": title || "Contact Us",
+  "description": description || "අපේ වෙබ් අඩවිය සම්බන්ධ කර ගැනීමට අවශ්‍ය සියලුම තොරතුරු මෙතැනින් ලබා ගන්න.",
+  "url": canonicalUrl,
+  "mainEntity": {
+    "@type": "Organization",
+    "name": config?.site?.title || "Wala Katha",
+    "url": base_url,
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": phone || "",
+      "contactType": "customer service",
+      "email": email || ""
+    }
+  }
+};
 ---
 
 <Base
   title={title}
   meta_title={meta_title}
-  description={description}
+  description={description || "අපේ වෙබ් අඩවිය සම්බන්ධ කර ගැනීමට අවශ්‍ය සියලුම තොරතුරු මෙතැනින් ලබා ගන්න."}
   image={image}
+  canonical={canonicalUrl}
 >
+  {/* Google ContactPage Structured Data ඇතුළත් කිරීම (SEO Booster) */}
+  <script type="application/ld+json" set:html={JSON.stringify(contactPageSchema)} />
+
   <section class="section">
     <div class="container">
       <h1 set:html={markdownify(title)} class="h2 page-heading" />
       <div class="row md:gx-5 gy-5">
         <div class="sm:col-5 md:col-4">
-          <p class="mb-8 text-2xl font-bold text-text-dark">Contact Info</p>
+          {/* 🛠️ DARK UI FIX: text-text-dark ඉවත් කර කළු පසුබිමට ගැළපෙන පන්ති ලබා දීම */}
+          <p class="mb-8 text-2xl font-bold text-text dark:text-slate-100">Contact Info</p>
           <ul class="flex flex-col space-y-8">
             <li>
-              <div class="flex text-text-dark items-center text-xl">
-                <FaAddressCard className="mr-3 text-primary" />
+              <div class="flex text-text dark:text-slate-100 items-center text-xl">
+                <BiSpreadsheet className="mr-2 text-primary h-6 w-6" />
                 <p class="font-semibold">Address</p>
               </div>
-              <p set:html={markdownify(address)} class="mt-2 leading-5 pl-8" />
+              <p set:html={markdownify(address)} class="mt-2 leading-5 pl-8 text-text/80 dark:text-slate-300" />
             </li>
             <li>
-              <div class="flex text-text-dark items-center text-xl">
-                <FaEnvelope className="mr-3 text-primary" />
+              <div class="flex text-text dark:text-slate-100 items-center text-xl">
+                <BiEnvelope className="mr-2 text-primary h-6 w-6" />
                 <p class="font-semibold">Email</p>
               </div>
               <p
                 set:html={markdownify(email)}
-                class="mt-2 leading-5 pl-8 content"
+                class="mt-2 leading-5 pl-8 content text-text/80 dark:text-slate-300"
               />
             </li>
             <li>
-              <div class="flex text-text-dark items-center text-xl">
-                <FaPhoneAlt className="mr-3 text-primary" />
+              <div class="flex text-text dark:text-slate-100 items-center text-xl">
+                <BiPhoneCall className="mr-2 text-primary h-6 w-6" />
                 <p class="font-semibold">Phone</p>
               </div>
-              <p set:html={markdownify(phone)} class="mt-2 leading-5 pl-8" />
+              <p set:html={markdownify(phone)} class="mt-2 leading-5 pl-8 text-text/80 dark:text-slate-300" />
             </li>
           </ul>
         </div>
         <div class="sm:col-7 md:col-8">
+          {/* Form UI Booster: කළු පසුබිම මත input fields පිරිසිදුව පෙන්වීමට focus සහ ring classes එකතු කිරීම */}
           <form
             class="contact-form row gy-2 justify-center"
             method="POST"
             action={contact_form_action}
           >
             <div class="lg:col-6">
-              <label class="mb-2 block" for="name"
+              <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="name"
                 >Name <span class="text-red-600">*</span></label
               >
               <input
-                class="form-input w-full"
+                class="form-input w-full rounded-lg bg-transparent border border-border dark:border-slate-800 focus:border-primary dark:focus:border-primary focus:ring-1 focus:ring-primary text-text dark:text-slate-200"
                 name="name"
                 type="text"
                 required
               />
             </div>
             <div class="lg:col-6">
-              <label class="mb-2 block" for="email"
+              <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="email"
                 >Email <span class="text-red-600">*</span></label
               >
               <input
-                class="form-input w-full"
+                class="form-input w-full rounded-lg bg-transparent border border-border dark:border-slate-800 focus:border-primary dark:focus:border-primary focus:ring-1 focus:ring-primary text-text dark:text-slate-200"
                 name="email"
                 type="email"
                 required
               />
             </div>
             <div class="col-12">
-              <label class="mb-2 block" for="subject">Subject</label>
-              <input class="form-input w-full" name="subject" type="text" />
+              <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="subject">Subject</label>
+              <input 
+                class="form-input w-full rounded-lg bg-transparent border border-border dark:border-slate-800 focus:border-primary dark:focus:border-primary focus:ring-1 focus:ring-primary text-text dark:text-slate-200" 
+                name="subject" 
+                type="text" 
+              />
             </div>
             <div class="col-12">
-              <label class="mb-2 block" for="message"
+              <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="message"
                 >Message <span class="text-red-600">*</span></label
               >
-              <textarea class="form-textarea w-full" rows="4"></textarea>
+              <textarea 
+                class="form-textarea w-full rounded-lg bg-transparent border border-border dark:border-slate-800 focus:border-primary dark:focus:border-primary focus:ring-1 focus:ring-primary text-text dark:text-slate-200" 
+                name="message" 
+                rows="4" 
+                required
+              ></textarea>
             </div>
             <div class="col-12">
-              <button class="btn btn-primary mt-2">Submit Now</button>
+              <button class="btn btn-primary mt-2 transition duration-300 hover:shadow-lg hover:shadow-primary/20">Submit Now</button>
             </div>
           </form>
         </div>

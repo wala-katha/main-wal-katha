@@ -4,7 +4,7 @@ import Base from "@/layouts/Base.astro";
 import { markdownify } from "@/lib/utils/textConverter";
 import type { CollectionEntry } from "astro:content";
 import { getEntry } from "astro:content";
-import { BiSpreadsheet, BiEnvelope, BiPhoneCall, BiXCircle } from "react-icons/bi"; // ❌ බටන් එක සඳහා BiXCircle එකතු කළා
+import { BiSpreadsheet, BiEnvelope, BiPhoneCall, BiXCircle } from "react-icons/bi"; 
 
 const entry = (await getEntry(
   "contact",
@@ -26,7 +26,7 @@ const contactPageSchema = {
   "@context": "https://schema.org",
   "@type": "ContactPage",
   "name": title || "Contact Us",
-  "description": description || "අපේ... වෙබ් අඩවිය සම්බන්ධ කර ගැනීමට අවශ්‍ය සියලුම තොරතුරු මෙතැනින් ලබා ගන්න.",
+  "description": description || "අපේ වෙබ් අඩවිය සම්බන්ධ කර ගැනීමට අවශ්‍ය සියලුම තොරතුරු මෙතැනින් ලබා ගන්න.",
   "url": canonicalUrl,
   "mainEntity": {
     "@type": "Organization",
@@ -89,11 +89,11 @@ const contactPageSchema = {
             action={contact_form_action}
           >
             {/* Name Input Container */}
-            <div class="lg:col-6 relative">
+            <div class="lg:col-6">
               <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="name">
                 Name <span class="text-red-600">*</span>
               </label>
-              <div class="relative flex items-center">
+              <div class="js-form-group relative flex items-center">
                 <input
                   class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10"
                   style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important;"
@@ -101,18 +101,18 @@ const contactPageSchema = {
                   type="text"
                   required
                 />
-                <button type="button" class="clear-btn absolute right-3 text-gray-400 hover:text-red-500 hidden transition-all">
-                  <BiXCircle class="h-5 w-5" />
+                <button type="button" class="clear-btn absolute right-3 text-gray-400 hover:text-red-500 hidden z-10">
+                  <BiXCircle class="h-5 w-5 pointer-events-none" />
                 </button>
               </div>
             </div>
 
             {/* Email Input Container */}
-            <div class="lg:col-6 relative">
+            <div class="lg:col-6">
               <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="email">
                 Email <span class="text-red-600">*</span>
               </label>
-              <div class="relative flex items-center">
+              <div class="js-form-group relative flex items-center">
                 <input
                   class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10"
                   style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important;"
@@ -120,34 +120,34 @@ const contactPageSchema = {
                   type="email"
                   required
                 />
-                <button type="button" class="clear-btn absolute right-3 text-gray-400 hover:text-red-500 hidden transition-all">
-                  <BiXCircle class="h-5 w-5" />
+                <button type="button" class="clear-btn absolute right-3 text-gray-400 hover:text-red-500 hidden z-10">
+                  <BiXCircle class="h-5 w-5 pointer-events-none" />
                 </button>
               </div>
             </div>
 
             {/* Subject Input Container */}
-            <div class="col-12 relative">
+            <div class="col-12">
               <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="subject">Subject</label>
-              <div class="relative flex items-center">
+              <div class="js-form-group relative flex items-center">
                 <input 
                   class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10" 
                   style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important;"
                   name="subject" 
                   type="text" 
                 />
-                <button type="button" class="clear-btn absolute right-3 text-gray-400 hover:text-red-500 hidden transition-all">
-                  <BiXCircle class="h-5 w-5" />
+                <button type="button" class="clear-btn absolute right-3 text-gray-400 hover:text-red-500 hidden z-10">
+                  <BiXCircle class="h-5 w-5 pointer-events-none" />
                 </button>
               </div>
             </div>
 
             {/* Message Textarea Container */}
-            <div class="col-12 relative">
+            <div class="col-12">
               <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="message">
                 Message <span class="text-red-600">*</span>
               </label>
-              <div class="relative">
+              <div class="js-form-group relative flex items-center">
                 <textarea 
                   class="form-textarea w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10" 
                   style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important;"
@@ -155,14 +155,15 @@ const contactPageSchema = {
                   rows="4" 
                   required
                 ></textarea>
-                <button type="button" class="clear-btn absolute right-3 top-3 text-gray-400 hover:text-red-500 hidden transition-all">
-                  <BiXCircle class="h-5 w-5" />
+                <button type="button" class="clear-btn absolute right-3 top-3 text-gray-400 hover:text-red-500 hidden z-10">
+                  <BiXCircle class="h-5 w-5 pointer-events-none" />
                 </button>
               </div>
             </div>
 
+            {/* Submit Button */}
             <div class="col-12">
-              <button class="btn btn-primary mt-2 transition duration-300 hover:shadow-lg hover:shadow-primary/20 w-full sm:w-auto">
+              <button type="submit" class="btn btn-primary mt-2 transition duration-300 hover:shadow-lg hover:shadow-primary/20 w-full sm:w-auto">
                 Submit Now
               </button>
             </div>
@@ -172,14 +173,14 @@ const contactPageSchema = {
     </div>
   </section>
 
-  {/* ⚡ SMART INPUT FUNCTIONALITY: ටයිප් කරන විට ❌ බටන් එක පෙන්වීමට සහ ක්ලියර් කිරීමට */}
+  {/* ⚡ SMART INPUT FUNCTIONALITY (100% FIXED): නිවැරදිව ටයිප් කරන විට ❌ පෙන්වීමට සහ මැකීමට */}
   <script is:inline>
     document.addEventListener("DOMContentLoaded", () => {
-      const formContainers = document.querySelectorAll(".relative");
+      const groups = document.querySelectorAll(".js-form-group");
 
-      formContainers.forEach(container => {
-        const input = container.querySelector(".form-input, .form-textarea");
-        const clearBtn = container.querySelector(".clear-btn");
+      groups.forEach(group => {
+        const input = group.querySelector(".form-input, .form-textarea");
+        const clearBtn = group.querySelector(".clear-btn");
 
         if (!input || !clearBtn) return;
 
@@ -193,10 +194,11 @@ const contactPageSchema = {
         });
 
         // ❌ බටන් එක ක්ලික් කළ විට අකුරු මැකී යාම
-        clearBtn.addEventListener("click", () => {
+        clearBtn.addEventListener("click", (e) => {
+          e.preventDefault(); // ෆෝම් එක සබ්මිට් වීම සම්පූර්ණයෙන්ම වළක්වයි
           input.value = "";
           clearBtn.classList.add("hidden");
-          input.focus(); // ආපසු Focus එක ලබා දීම
+          input.focus(); 
         });
       });
     });

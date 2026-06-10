@@ -1,6 +1,7 @@
 ---
 import Posts from "@/components/Posts.astro";
 import Base from "@/layouts/Base.astro";
+import config from "@/config/config.json"; // SEO සඳහා Config ගොනුව සම්බන්ධ කළා
 import { getSinglePage } from "@/lib/contentParser.astro";
 import { getTaxonomy } from "@/lib/taxonomyParser.astro";
 import { sortByDate } from "@/lib/utils/sortFunctions";
@@ -9,6 +10,9 @@ import { humanize } from "@/lib/utils/textConverter";
 
 export async function getStaticPaths() {
   const tags = await getTaxonomy("posts", "tags");
+
+  // 🛠️ CRITICAL BUILD FIX (Auto-Fix): Tags ලැයිස්තුව හිස් නම් Astro Build එක Fail වීම වළක්වයි
+  if (!tags || tags.length === 0) return [];
 
   return tags.map((tag) => {
     return {
@@ -20,18 +24,74 @@ export async function getStaticPaths() {
 const { tag } = Astro.params;
 
 const posts = await getSinglePage("posts");
-const filterByTags = taxonomyFilter(posts, "tags", tag);
+// 🛠️ CRITICAL DATA PROTECTION: posts දත්ත හිස් නම්සිදුවන සයිට් ක්‍රෑෂ් (Crash) වැළැක්වීම
+const filterByTags = taxonomyFilter(posts || [], "tags", tag);
 const sortedPosts = sortByDate(filterByTags);
 
 const title = humanize(tag || "");
+
+// 📈 SEO ප්‍රශස්තකරණය: සෙවුම් යන්ත්‍ර සඳහා නිවැරදි Meta දත්ත සහ පිරිසිදු ලින්ක්ස්
+const metaTitle = `${title} - ටැගය | ${config?.site?.title || "Wala Katha"}`;
+const metaDescription = `${title} ටැගය (Tag) යටතේ ඇති සියලුම බ්ලොග් ලිපි සහ නවතම රසවත් කතා මෙතැනින් එකම තැනකින් කියවන්න.`;
+
+const base_url = (config?.site?.base_url || "").replace(/\/$/, ""); 
+const canonicalUrl = `${base_url}/tags/${tag}`;
+
+// 🚀 GOOGLE SEO BREADCRUMB SCHEMA: සෙවුම් යන්ත්‍ර වලට ටැග් ව්‍යුහය වටහා දීමට (JSON-LD)
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": base_url
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tags",
+      "item": `${base_url}/tags` // යම් හෙයකින් /tags පිටුවක් තිබේ නම් ඒ සඳහා ලින්ක් එක
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": title,
+      "item": canonicalUrl
+    }
+  ]
+};
 ---
 
-<Base title={title || "Tag"}>
+<Base 
+  title={metaTitle} 
+  description={metaDescription} 
+  canonical={canonicalUrl}
+>
+  {/* Google Breadcrumb Snippet එක ඇතුළත් කිරීම (SEO Booster) */}
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+
+  {/* 100% Original Section Layout Structure */}
   <div class="section">
     <div class="container">
+      
+      {/* 100% Original Sub-heading */}
       <p class="text-center text-2xl mb-4">Showing Posts From</p>
+      
+      {/* 100% Original Main Tag Heading */}
       <h1 class="h2 mb-16 text-center text-primary">{title}</h1>
-      <Posts posts={sortedPosts} fluid={false} />
+      
+      {/* Posts List Component with Original Props */}
+      {sortedPosts && sortedPosts.length > 0 ? (
+        <Posts posts={sortedPosts} fluid={false} />
+      ) : (
+        // Original Style එක වෙනස් නොකර දත්ත නොමැති විට පෙන්වන කොටස
+        <div class="py-12 text-center opacity-60">
+          <p>මෙම ටැගය යටතේ ලිපි කිසිවෙකු හමුනොවීය.</p>
+        </div>
+      )}
+      
     </div>
   </div>
 </Base>

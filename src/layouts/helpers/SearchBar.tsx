@@ -2,7 +2,6 @@ import dateFormat from "@/lib/utils/dateFormat";
 import { humanize, slugify } from "@/lib/utils/textConverter";
 import Fuse from "fuse.js";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { BiCalendarEdit, BiCategoryAlt } from "react-redux"; // වැරදි ඉම්පෝර්ට් තිබේ නම් නිවැරදි කරන්න (React-icons භාවිත කර ඇත)
 import { BiCalendarEdit as CalendarIcon, BiCategoryAlt as CategoryIcon } from "react-icons/bi";
 import {
   IoSearchOutline,
@@ -128,7 +127,7 @@ export default function SearchBar({ searchList }: Props) {
             aria-expanded={searchResults.length > 0}
             className="search-input w-full pl-12 pr-12 py-3.5 rounded-xl border border-neutral-800 bg-[#0d0e12]/90 text-[#F8F8FF] text-[17px] font-medium outline-none transition-all duration-200 focus:border-[#01AD9F] focus:bg-[#111318]"
             style={{
-              width: "100% !important", // බලහත්කාරයෙන් Layout එක එකම මට්ටමක තබා ගැනීමට
+              width: "100% !important",
               boxSizing: "border-box"
             }}
           />

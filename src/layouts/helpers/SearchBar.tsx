@@ -23,29 +23,28 @@ interface SearchResult {
 export default function SearchBar({ searchList }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputVal, setInputVal] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchResult[] | null>(
-    null,
-  );
+  const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
+
+  // 🧠 FAST & DYNAMIC FUZZY SEARCH (🎯 FIX: Content එකත් සර්ච් කිරීමට Keys වලට එකතු කළා)
+  const fuse = new Fuse(searchList, {
+    keys: ["data.title", "data.categories", "content"], // content එක දැම්මා, දැන් කතා ඇතුළේ ඒවත් සර්ච් වෙනවා
+    includeMatches: true,
+    threshold: 0.4, // සෙවුම් නිරවද්‍යතාවය තවත් වැඩි කිරීමට 0.4 කළා
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputVal(e.currentTarget.value);
   };
 
-  // ❌ සර්ච් එක ක්ලියර් කිරීමේ ක්‍රියාවලිය
   const handleClear = () => {
     setInputVal("");
+    setSearchResults([]);
     if (inputRef.current) {
       inputRef.current.focus();
     }
   };
 
-  const fuse = new Fuse(searchList, {
-    keys: ["data.title", "data.categories", "data.tags"],
-    includeMatches: true,
-    minMatchCharLength: 2,
-    threshold: 0.5,
-  });
-
+  // URL එකෙන් Query එක කියවීම (Hydration Safe)
   useEffect(() => {
     const searchUrl = new URLSearchParams(window.location.search);
     const searchStr = searchUrl.get("q");
@@ -59,15 +58,15 @@ export default function SearchBar({ searchList }: Props) {
     }, 50);
   }, []);
 
+  // ⚡ INSTANT SEARCH LOGIC (🎯 FIX: අකුරු 1ක් ගැහුවත් ක්ෂණිකව සර්ච් එක වැඩ කරයි)
   useEffect(() => {
-    let inputResult = inputVal.length > 2 ? fuse.search(inputVal) : [];
-    setSearchResults(inputResult);
+    let inputResult = inputVal.length > 0 ? fuse.search(inputVal) : [];
+    setSearchResults(inputResult as SearchResult[]);
 
     if (inputVal.length > 0) {
       const searchParams = new URLSearchParams(window.location.search);
       searchParams.set("q", inputVal);
-      const newRelativePathQuery =
-        window.location.pathname + "?" + searchParams.toString();
+      const newRelativePathQuery = window.location.pathname + "?" + searchParams.toString();
       history.pushState(null, "", newRelativePathQuery);
     } else {
       history.pushState(null, "", window.location.pathname);
@@ -77,7 +76,7 @@ export default function SearchBar({ searchList }: Props) {
   return (
     <div className="min-h-[50vh] px-2 select-none relative">
       
-      {/* 🎯 SEO & UX FIX: මුල් පිටුවට යාමට සහ සර්ච් එක වසා දැමීමට ඇති ප්‍රිමියම් EXIT CLOSE BUTTON එක */}
+      {/* EXIT CLOSE BUTTON */}
       <div className="max-w-2xl mx-auto flex justify-end mb-4">
         <a
           href="/"
@@ -91,10 +90,9 @@ export default function SearchBar({ searchList }: Props) {
         </a>
       </div>
 
-      {/* 👑 PREMIUM CAPSULE SEARCH BOX WITH DYNAMIC CLOSE BUTTON */}
+      {/* PREMIUM CAPSULE SEARCH BOX */}
       <div className="max-w-2xl mx-auto mb-10">
         <div className="relative flex items-center group">
-          {/* 🔍 Premium Animated Left Search Icon (🎯 FIX: වඩාත් දීප්තිමත් කර කැපී පෙනෙන ලෙස සකස් කළා) */}
           <div className="absolute left-4 text-[#01AD9F] filter drop-shadow-[0_0_8px_rgba(1,173,159,0.5)] transition-transform duration-300 pointer-events-none group-focus-within:scale-110">
             <IoSearchOutline className="h-6 w-6" />
           </div>
@@ -111,7 +109,6 @@ export default function SearchBar({ searchList }: Props) {
             ref={inputRef}
           />
 
-          {/* ❌ ඩයිනමික් ක්ලෝස් / ක්ලියර් බටන් එක (ටයිප් කළ විට පමණක් ලස්සනට මතුවේ) */}
           {inputVal.length > 0 && (
             <button
               onClick={handleClear}
@@ -120,14 +117,14 @@ export default function SearchBar({ searchList }: Props) {
               title="Clear search"
               aria-label="Clear search space"
             >
-              <IoCloseCircleOutline className="h-6 w-6 animate-fade-in" />
+              <IoCloseCircleOutline className="h-6 w-6" />
             </button>
           )}
         </div>
       </div>
 
       {/* SEARCH COUNTER */}
-      {inputVal.length > 1 && (
+      {inputVal.length > 0 && (
         <div className="my-8 text-center text-sm sm:text-base text-white/60 font-medium tracking-wide">
           Found <span className="text-[#01AD9F] font-bold">{searchResults?.length || 0}</span>
           {searchResults?.length === 1 ? " result" : " results"} for <span className="text-[#F8F8FF] font-semibold">'{inputVal}'</span>
@@ -161,21 +158,23 @@ export default function SearchBar({ searchList }: Props) {
                   <BiCalendarEdit className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
                   <span>{dateFormat(item.data.date)}</span>
                 </li>
-                <li className="flex items-center font-medium">
-                  <BiCategoryAlt className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
-                  <div className="flex flex-wrap gap-1">
-                    {item.data.categories.map((category: string, i: number) => (
-                      <a
-                        key={i}
-                        href={`/categories/${slugify(category)}`}
-                        className="hover:text-[#01AD9F] transition duration-200"
-                      >
-                        {humanize(category)}
-                        {i !== item.data.categories.length - 1 && ","}
-                      </a>
-                    ))}
-                  </div>
-                </li>
+                {item.data.categories && (
+                  <li className="flex items-center font-medium">
+                    <BiCategoryAlt className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
+                    <div className="flex flex-wrap gap-1">
+                      {item.data.categories.map((category: string, i: number) => (
+                        <a
+                          key={i}
+                          href={`/categories/${slugify(category)}`}
+                          className="hover:text-[#01AD9F] transition duration-200"
+                        >
+                          {humanize(category)}
+                          {i !== item.data.categories.length - 1 && ","}
+                        </a>
+                      ))}
+                    </div>
+                  </li>
+                )}
               </ul>
 
               {/* POST TITLE */}

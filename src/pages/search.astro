@@ -73,7 +73,7 @@ const searchPageSchema = {
       padding: 2.5rem 2rem !important;
       box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7) !important;
       position: relative;
-      overflow: hidden;
+      overflow: visible !important; /* රිසල්ට්ස් බොක්ස් එක එළියට ඒමට ඉඩ දීම */
       margin-bottom: 2.5rem;
     }
 
@@ -85,38 +85,44 @@ const searchPageSchema = {
       left: -50%;
       width: 200%;
       height: 200%;
-      background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%) !important;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.04) 0%, transparent 70%) !important;
       pointer-events: none;
     }
 
-    /* 🎯 සෙවුම් පෙට්ටිය ඇතුළත ඇති Input එක බලහත්කාරයෙන් Premium Dark Style එකට හැරවීම */
-    :global(.search-hero-container input), :global(#search-bar), :global(.search-input) {
+    /* 🎯 රිසල්ට්ස් කාඩ්ස් වලට බාධා නොකර Input එක පමණක් තෝරා ස්ටයිල් කිරීම (Conflict Resolved) */
+    :global(.search-hero-container input[type="text"]), 
+    :global(.search-hero-container .form-input),
+    :global(#search-bar) {
       background-color: #121212 !important;
       border: 2px solid #262626 !important;
       color: #ffffff !important;
       font-size: 18px !important;
       font-weight: 600 !important;
       border-radius: 12px !important;
-      padding: 0.85rem 1.2rem 0.85rem 3rem !important;
+      padding: 0.85rem 1.2rem 0.85rem 1.2rem !important;
       width: 100% !important;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      display: block !important;
     }
 
     /* Input එක උඩ ක්ලික් කළ විට එන ආකර්ෂණීය Glow එක */
-    :global(.search-hero-container input:focus), :global(#search-bar:focus) {
+    :global(.search-hero-container input[type="text"]:focus), 
+    :global(#search-bar:focus) {
       border-color: #10b981 !important;
       box-shadow: 0 0 15px rgba(16, 185, 129, 0.25) !important;
       background-color: #161616 !important;
       outline: none !important;
     }
 
-    /* 🧩 Search Results බ්ලොක්ස් කළු පසුබිමට ගැළපීම */
-    :global(.search-result-item), :global(.post-card), :global(.card) {
+    /* 🧩 ටයිප් කිරීමෙන් පසු පහළින් මතුවන Search Results කාඩ්ස් කළු පසුබිමට ගැළපීම */
+    :global(.search-result-item), :global(.search-hero-container .post-card), :global(.search-hero-container .card) {
       background-color: #0d0d0d !important;
       border: 1px solid #1a1a1a !important;
       border-radius: 14px !important;
-      transition: all 0.3s ease !important;
+      margin-top: 1rem !important;
+      text-align: left !important;
     }
+    
     :global(.search-result-item:hover) {
       border-color: rgba(16, 185, 129, 0.3) !important;
       background-color: #121212 !important;
@@ -152,11 +158,11 @@ const searchPageSchema = {
           <BiSearchAlt className="h-8 w-8 mr-2 animate-pulse" />
           <span class="text-xs md:text-sm font-bold tracking-widest uppercase text-emerald-400/80">WalaKatha Instant Finder</span>
         </div>
-        <h2 class="text-xl md:text-2xl font-black text-white mb-2">ඔබට අවශ්‍ය ඕනෑම කතාවක් මෙතැනින් සොයන්න</h2>
+        <h2 class="text-xl md:text-2xl font-black text-white mb-2">ඔබට 😊 අවශ්‍ය ඕනෑම කතාවක් මෙතැනින් සොයන්න</h2>
         <p class="text-xs md:text-sm text-slate-400 mb-6 max-w-lg mx-auto">කතාවේ නම, ලේඛකයා හෝ ඔබට මතක ඕනෑම වචනයක් පහත පෙට්ටියේ Type කරන්න.</p>
         
         {/* React සෙවුම් සංරචකය */}
-        <div class="text-left relative">
+        <div class="text-left relative w-full">
           <SearchBar client:load searchList={searchList} />
         </div>
       </div>

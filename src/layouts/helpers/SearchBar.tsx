@@ -29,16 +29,22 @@ export default function SearchBar({ searchList }: Props) {
   const [inputVal, setInputVal] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
 
-  // ✅ Stable Fuse Instance
+  // Safe Search List Filtering (හිස් හෝ කැඩුණු දත්ත මඟ හැරීමට)
+  const safeSearchList = useMemo(() => {
+    if (!Array.isArray(searchList)) return [];
+    return searchList.filter(item => item && item.slug && item.data);
+  }, [searchList]);
+
+  // Stable Fuse Instance
   const fuse = useMemo(
     () =>
-      new Fuse(searchList, {
+      new Fuse(safeSearchList, {
         keys: ["data.title", "data.categories", "data.tags", "content"],
         includeMatches: true,
         minMatchCharLength: 2,
         threshold: 0.4,
       }),
-    [searchList.length]
+    [safeSearchList]
   );
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,19 +76,24 @@ export default function SearchBar({ searchList }: Props) {
     });
   }, []);
 
-  // Live Search Logic (No replaceState conflict)
+  // Live Search Execution
   useEffect(() => {
-    if (inputVal.trim().length > 2) {
-      const results = fuse.search(inputVal.trim());
-      setSearchResults(results as SearchResult[]);
+    const trimmed = inputVal.trim();
+    if (trimmed.length > 2) {
+      try {
+        const results = fuse.search(trimmed);
+        setSearchResults(results as SearchResult[]);
+      } catch (err) {
+        console.error("Fuse search error:", err);
+        setSearchResults([]);
+      }
     } else {
       setSearchResults([]);
     }
   }, [inputVal, fuse]);
 
   return (
-    // 🧩 STABLE WRAPPER: overflow-anchor-none මඟින් රිසල්ට්ස් ලෝඩ් වෙද්දී Layout එක පැනීම වළක්වයි
-    <div className="w-full select-none relative z-50 overflow-anchor-none">
+    <div className="w-full select-none relative z-50">
 
       {/* EXIT BUTTON */}
       <div className="max-w-2xl mx-auto flex justify-end mb-4">
@@ -110,7 +121,6 @@ export default function SearchBar({ searchList }: Props) {
             <IoSearchOutline className="h-6 w-6" />
           </span>
 
-          {/* ✅ FIXED INPUT: search.astro එකේ තියෙන CSS Classes 100%ක්ම මෙතනට සම්බන්ධ කළා */}
           <input
             ref={inputRef}
             id="search-bar"
@@ -127,7 +137,6 @@ export default function SearchBar({ searchList }: Props) {
             aria-expanded={searchResults.length > 0}
             className="search-input w-full pl-12 pr-12 py-3.5 rounded-xl border border-neutral-800 bg-[#0d0e12]/90 text-[#F8F8FF] text-[17px] font-medium outline-none transition-all duration-200 focus:border-[#01AD9F] focus:bg-[#111318]"
             style={{
-              width: "100% !important",
               boxSizing: "border-box"
             }}
           />
@@ -164,74 +173,88 @@ export default function SearchBar({ searchList }: Props) {
         role="list"
         className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:gap-8 clear-both"
       >
-        {searchResults.map(({ item }) => (
-          <article
-            key={item.slug}
-            role="listitem"
-            className="search-result-item group/card flex flex-col justify-between border border-neutral-800/60 bg-[#0a0b0d]/80 p-4 rounded-2xl hover:border-[#01AD9F]/30 hover:shadow-lg hover:shadow-[#01AD9F]/5 transition-all duration-300"
-          >
-            <div>
-              {item.data.image && (
-                <a
-                  href={`/${item.slug}`}
-                  className="rounded-xl block overflow-hidden relative aspect-video w-full bg-neutral-900"
-                >
-                  <img
-                    className="group-hover/card:scale-[1.03] w-full h-full object-cover transition-transform duration-500"
-                    src={item.data.image}
-                    alt={item.data.title}
-                    loading="lazy"
-                    width={445}
-                    height={230}
-                    decoding="async"
-                  />
-                </a>
-              )}
+        {searchResults.map(({ item }) => {
+          // ආරක්ෂිත විචල්‍යයන් (Defensive check to strictly prevent undefined breaks)
+          const title = item?.data?.title ?? "Untitled Post";
+          const image = item?.data?.image;
+          const date = item?.data?.date;
+          const categories = item?.data?.categories;
 
-              {/* METADATA LIST */}
-              <ul className="mt-4 mb-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-neutral-400">
-                <li className="flex items-center font-medium">
-                  <CalendarIcon className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
-                  <time dateTime={item.data.date}>
-                    {dateFormat(item.data.date)}
-                  </time>
-                </li>
-                {item.data.categories && item.data.categories.length > 0 && (
-                  <li className="flex items-center font-medium">
-                    <CategoryIcon className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
-                    <div className="flex flex-wrap gap-1">
-                      {item.data.categories.map((category: string, i: number) => (
-                        <a
-                          key={i}
-                          href={`/categories/${slugify(category)}`}
-                          className="hover:text-[#01AD9F] transition-colors duration-200"
-                        >
-                          {humanize(category)}
-                          {i !== item.data.categories.length - 1 && ","}
-                        </a>
-                      ))}
-                    </div>
-                  </li>
+          return (
+            <article
+              key={item.slug}
+              role="listitem"
+              className="search-result-item group/card flex flex-col justify-between border border-neutral-800/60 bg-[#0a0b0d]/80 p-4 rounded-2xl hover:border-[#01AD9F]/30 hover:shadow-lg hover:shadow-[#01AD9F]/5 transition-all duration-300"
+            >
+              <div>
+                {image && (
+                  <a
+                    href={`/${item.slug}`}
+                    className="rounded-xl block overflow-hidden relative aspect-video w-full bg-neutral-900"
+                  >
+                    <img
+                      className="group-hover/card:scale-[1.03] w-full h-full object-cover transition-transform duration-500"
+                      src={image}
+                      alt={title}
+                      loading="lazy"
+                      width={445}
+                      height={230}
+                      decoding="async"
+                    />
+                  </a>
                 )}
-              </ul>
 
-              {/* POST TITLE */}
-              <h3 className="mb-2 text-base sm:text-lg font-bold tracking-tight">
-                <a
-                  href={`/${item.slug}`}
-                  className="block text-[#F8F8FF] hover:text-[#01AD9F] line-clamp-2 leading-snug transition-colors duration-200"
-                >
-                  {item.data.title}
-                </a>
-              </h3>
-            </div>
+                {/* METADATA LIST */}
+                <ul className="mt-4 mb-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-neutral-400">
+                  {date && (
+                    <li className="flex items-center font-medium">
+                      <CalendarIcon className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
+                      <time dateTime={date}>
+                        {dateFormat(date)}
+                      </time>
+                    </li>
+                  )}
+                  {/* ✅ CRITICAL CRASH PROTECTION: Array එකක්ම බව තහවුරු කර ගැනීම */}
+                  {Array.isArray(categories) && categories.length > 0 && (
+                    <li className="flex items-center font-medium">
+                      <CategoryIcon className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
+                      <div className="flex flex-wrap gap-1">
+                        {categories.map((category: string, i: number) => {
+                          if (!category) return null;
+                          return (
+                            <a
+                              key={i}
+                              href={`/categories/${slugify(category)}`}
+                              className="hover:text-[#01AD9F] transition-colors duration-200"
+                            >
+                              {humanize(category)}
+                              {i !== categories.length - 1 && ","}
+                            </a>
+                          );
+                        })}
+                      </div>
+                    </li>
+                  )}
+                </ul>
 
-            {/* CONTENT SNIPPET */}
-            <p className="text-neutral-400 text-xs sm:text-sm line-clamp-2 mt-1 leading-relaxed">
-              {item.content}
-            </p>
-          </article>
-        ))}
+                {/* POST TITLE */}
+                <h3 className="mb-2 text-base sm:text-lg font-bold tracking-tight">
+                  <a
+                    href={`/${item.slug}`}
+                    className="block text-[#F8F8FF] hover:text-[#01AD9F] line-clamp-2 leading-snug transition-colors duration-200"
+                  >
+                    {title}
+                  </a>
+                </h3>
+              </div>
+
+              {/* CONTENT SNIPPET */}
+              <p className="text-neutral-400 text-xs sm:text-sm line-clamp-2 mt-1 leading-relaxed">
+                {item.content ?? ""}
+              </p>
+            </article>
+          );
+        })}
       </div>
 
       {/* EMPTY STATE */}

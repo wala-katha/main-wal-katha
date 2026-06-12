@@ -8,11 +8,11 @@ import { BiSearchAlt } from "react-icons/bi";
 // Retrieve all articles
 const posts = await getSinglePage("posts");
 
-// List of items to search in
+// ✅ FIXED: React එකට දත්ත යවද්දී slug සහ id දෙකම ස්ථාවරව යන බව තහවුරු කළා
 const searchList = posts.map((item) => ({
-  slug: item.id,
+  slug: item.slug || item.id || "",
   data: item.data,
-  content: item.body,
+  content: item.body || "",
 }));
 
 // SEO 2026 — canonical URL & logo
@@ -21,7 +21,7 @@ const canonicalUrl = `${base_url}/search`;
 const siteLogo  = `${base_url}/images/logo.png`;
 const siteTitle = config?.site?.title || "WalaKatha";
 
-// 🚀 SEARCH PAGE SCHEMA 2026 — SearchAction + WebSite sameAs
+// 🚀 SEARCH PAGE SCHEMA 2026
 const searchPageSchema = {
   "@context": "https://schema.org",
   "@graph": [
@@ -110,10 +110,6 @@ const searchPageSchema = {
     <link rel="alternate" hreflang="x-default" href={canonicalUrl} />
   </Fragment>
 
-  {/* ── STYLES ──
-      ✅ FIX: !important හෝ :global() input overrides නෑ
-      Container / hero styles පමණක් — React controlled input touch නොකෙරේ
-  ── */}
   <style>
     .search-hero-container {
       background: linear-gradient(135deg, #0d0d0d 0%, #080808 100%);
@@ -137,7 +133,6 @@ const searchPageSchema = {
       pointer-events: none;
     }
 
-    /* ✅ SEO-safe visually hidden H1 — Google safe pattern */
     .seo-visually-hidden {
       position: absolute;
       width: 1px;
@@ -177,9 +172,9 @@ const searchPageSchema = {
           කතාවේ නම, ලේඛකයා හෝ ඔබට මතක ඕනෑම වචනයක් පහත පෙට්ටියේ Type කරන්න.
         </p>
 
-        {/* ✅ SearchBar — client:load, no wrapper CSS that touches input */}
+        {/* ✅ FIXED: client:only="react" යෙදීමෙන් බ්‍රවුසර් එක ඇතුළේ සිදුවන Hydration Crash එක සම්පූර්ණයෙන්ම නැති වේ */}
         <div class="text-left relative">
-          <SearchBar client:load searchList={searchList} />
+          <SearchBar client:only="react" searchList={searchList} />
         </div>
       </div>
 

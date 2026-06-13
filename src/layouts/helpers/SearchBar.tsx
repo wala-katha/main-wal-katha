@@ -220,8 +220,28 @@ export default function SearchBar({ searchList }: Props) {
               <ul className="mt-5 mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:text-sm text-white/50">
                 <li className="flex items-center font-medium">
                   <BiCalendarEdit className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
-                  <time dateTime={item.data.date}>
-                    {item.data.date ? dateFormat(item.data.date) : ""}
+                  <time dateTime={
+                    item.data.date && typeof item.data.date === "object" && "isoString" in item.data.date
+                      ? item.data.date.isoString
+                      : String(item.data.date ?? "")
+                  }>
+                    {(() => {
+                      // ✅ ROOT FIX: dateFormat() ලබාදෙන return value එක
+                      // {day, month, year, isoString, toString} object එකක්.
+                      // JSX එකේ object එකක් direct render කළ විට React Error #31
+                      // throw වී, component crash වෙයි → SearchBar unmount →
+                      // input "disappears" (3-letter type වූ විට results render
+                      // වෙන මොහොතේම මේ crash එක සිදුවේ).
+                      if (!item.data.date) return "";
+                      const formatted = dateFormat(item.data.date);
+                      if (formatted && typeof formatted === "object") {
+                        // object එකේ toString() method එක call කර string ලබාගන්න
+                        return typeof (formatted as any).toString === "function"
+                          ? (formatted as any).toString()
+                          : String((formatted as any).isoString ?? "");
+                      }
+                      return String(formatted ?? "");
+                    })()}
                   </time>
                 </li>
                 <li className="flex items-center font-medium">

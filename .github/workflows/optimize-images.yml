@@ -1,22 +1,31 @@
 name: Optimize Author Images
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
 jobs:
   optimize:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install Sharp
-        run: npm install sharp
+
+      - name: Install Sharp in temp folder
+        run: |
+          mkdir -p /tmp/sharp-tool
+          cd /tmp/sharp-tool
+          npm init -y
+          npm install sharp
+
       - name: Write optimizer script
         run: |
-          cat > optimize.mjs << 'EOF'
-          import sharp from 'sharp';
+          cat > /tmp/optimize.mjs << 'EOF'
+          import sharp from '/tmp/sharp-tool/node_modules/sharp/lib/index.js';
           import { readdirSync } from 'fs';
           const dir = 'public/images/authors';
           for (const file of readdirSync(dir)) {
@@ -30,8 +39,10 @@ jobs:
             }
           }
           EOF
+
       - name: Resize author images
-        run: node optimize.mjs
+        run: node /tmp/optimize.mjs
+
       - name: Commit optimized images
         run: |
           git config user.name "github-actions"

@@ -1,14 +1,13 @@
 import { glob } from "astro/loaders";
 import { defineCollection } from "astro:content";
 import { z } from "astro/zod";
-import { image } from "astro:content";
 
 const aboutCollection = defineCollection({
   loader: glob({ pattern: "**/-*.{md,mdx}", base: "src/content/about" }),
-  schema: ({ image: img }) => z.object({
+  schema: z.object({
     title: z.string(),
     meta_title: z.string().optional(),
-    image: img().optional(),
+    image: z.string().optional(),
     draft: z.boolean().optional(),
     what_i_do: z.object({
       title: z.string(),
@@ -24,21 +23,21 @@ const aboutCollection = defineCollection({
 
 const contactCollection = defineCollection({
   loader: glob({ pattern: "**/-*.{md,mdx}", base: "src/content/contact" }),
-  schema: ({ image: img }) => z.object({
+  schema: z.object({
     title: z.string(),
     meta_title: z.string().optional(),
     description: z.string().optional(),
-    image: img().optional(),
+    image: z.string().optional(),
     draft: z.boolean().optional(),
   }),
 });
 
 const authorsCollection = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "src/content/authors" }),
-  schema: ({ image: img }) => z.object({
+  schema: z.object({
     title: z.string(),
     meta_title: z.string().optional(),
-    image: img().optional(),
+    image: z.string().optional(),
     description: z.string().optional(),
     social: z
       .object({
@@ -56,12 +55,12 @@ const authorsCollection = defineCollection({
 
 const postsCollection = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "src/content/posts" }),
-  schema: ({ image: img }) => z.object({
+  schema: z.object({
     title: z.string(),
     meta_title: z.string().optional(),
     description: z.string().optional(),
     date: z.coerce.date().optional(),
-    image: img().optional(),
+    image: z.string().optional(),
     categories: z.array(z.string()).default(() => ["others"]),
     authors: z.array(z.string()).default(() => ["Admin"]),
     tags: z.array(z.string()).default(() => ["others"]),
@@ -71,11 +70,11 @@ const postsCollection = defineCollection({
 
 const pagesCollection = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "src/content/pages" }),
-  schema: ({ image: img }) => z.object({
+  schema: z.object({
     title: z.string(),
     meta_title: z.string().optional(),
     description: z.string().optional(),
-    image: img().optional(),
+    image: z.string().optional(),
     layout: z.string().optional(),
     draft: z.boolean().optional(),
   }),

@@ -8,7 +8,6 @@ import { defineConfig, fontProviders, sharpImageService } from "astro/config";
 import config from "./src/config/config.json";
 import theme from "./src/config/theme.json";
 
-// Helper to parse font string format: "FontName:wght@400;500;600;700"
 function parseFontString(fontStr) {
   const [name, weightPart] = fontStr.split(":");
   let weights = [400];
@@ -24,7 +23,6 @@ function parseFontString(fontStr) {
   return { name: cleanName, weights };
 }
 
-// Build fonts configuration from theme.json
 const fontsConfig = Object.entries(theme.fonts.font_family)
   .filter(([key]) => !key.includes("_type"))
   .map(([key, fontStr]) => {
@@ -53,28 +51,15 @@ export default defineConfig({
       ? "always"
       : "never",
 
-  // ✅ Fix 1: Sharp image service with WebP + quality optimization
   image: {
     service: sharpImageService(),
-    defaultFormat: "webp",
     experimentalResponsiveImages: true,
   },
 
-  // ✅ Fix 2: Vite CSS code splitting to reduce render-blocking
   vite: {
     plugins: [tailwindcss()],
     build: {
       cssCodeSplit: true,
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            vendor: ["react", "react-dom"],
-          },
-        },
-      },
-    },
-    css: {
-      transformer: "lightningcss",
     },
   },
 
@@ -82,14 +67,11 @@ export default defineConfig({
 
   integrations: [
     react(),
-
-    // ✅ Fix 3: Sitemap with explicit config
     sitemap({
       changefreq: "weekly",
       priority: 0.7,
       lastmod: new Date(),
     }),
-
     AutoImport({
       imports: [
         "@/shortcodes/Button",
@@ -101,13 +83,11 @@ export default defineConfig({
         "@/shortcodes/Tab",
       ],
     }),
-
     mdx(),
-
     gtm({
       enable: config.google_tag_manager.enable,
       id: config.google_tag_manager.gtm_id,
-      devMode: false, // ✅ Fix 4: Production එකේදී devMode false කරන්න
+      devMode: false,
     }),
   ],
 

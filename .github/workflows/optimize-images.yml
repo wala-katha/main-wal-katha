@@ -34,8 +34,15 @@ jobs:
             if (/\.(jpg|jpeg|png)$/i.test(file)) {
               const out = dir + '/' + file.replace(/\.[^.]+$/, '.webp');
               await sharp(dir + '/' + file)
-                .resize(100, 100, { fit: 'cover' })
-                .webp({ quality: 80 })
+                .resize(400, 400, {
+                  fit: 'cover',
+                  kernel: sharp.kernel.lanczos3,
+                })
+                .webp({
+                  quality: 100,
+                  lossless: true,
+                  effort: 6,
+                })
                 .toFile(out);
               console.log('Done:', file, '->', out);
             }
@@ -47,5 +54,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add public/images/authors/*.webp
-          git diff --staged --quiet || git commit -m "Auto: optimize author images to WebP"
+          git diff --staged --quiet || git commit -m "Auto: optimize author images to WebP lossless"
           git push

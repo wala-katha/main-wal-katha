@@ -22,10 +22,12 @@ jobs:
           npm init -y
           npm install sharp
 
-      - name: Write optimizer script
+      - name: Resize author images
         run: |
-          cat > /tmp/optimize.mjs << 'EOF'
-          import sharp from '/tmp/sharp-tool/node_modules/sharp/lib/index.js';
+          node --input-type=module << 'EOF'
+          import { createRequire } from 'module';
+          const require = createRequire('/tmp/sharp-tool/package.json');
+          const sharp = require('sharp');
           import { readdirSync } from 'fs';
           const dir = 'public/images/authors';
           for (const file of readdirSync(dir)) {
@@ -39,9 +41,6 @@ jobs:
             }
           }
           EOF
-
-      - name: Resize author images
-        run: node /tmp/optimize.mjs
 
       - name: Commit optimized images
         run: |

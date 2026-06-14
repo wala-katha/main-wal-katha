@@ -1,7 +1,7 @@
 ---
 title: "walkatha"
 meta_title: "අනූ ලියනආරංචි (Author) | Wal Katha"
-image: "/images/authors/john-doe.jpg"
+image: "/images/authors/john-doe.webp"
 description: "Wala Katha නිල ලේඛිකා අනූ ලියනආරංචි විසින් රචිත සියලුම අලුත් සිංහල වල් කතා සහ වැල් කතා එකතුව මෙතනින් කියවන්න."
 social:
   facebook: "https://www.facebook.com/walkatha"

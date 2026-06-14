@@ -1,4 +1,3 @@
-
 ---
 import config from "@/config/config.json";
 import Base from "@/layouts/Base.astro";
@@ -85,8 +84,6 @@ const contactPageSchema = {
         </div>
 
         <div class="sm:col-7 md:col-8">
-          <!-- FIX 3: flex class හිදී hidden override වීම වළකන්නට
-               inline-flex + hidden භාවිතා නොකර, JS වලින් display toggle කරයි -->
           <div
             id="form-success-alert"
             class="hidden mb-6 p-4 rounded-lg bg-emerald-500/20 border border-emerald-500"
@@ -128,15 +125,11 @@ const contactPageSchema = {
             class="contact-form row gy-3 justify-center"
             novalidate
           >
-            <!-- FIX 7: replyto — user email reply address ලෙස set කිරීමට JS වලින් handle කෙරේ -->
             <input type="hidden" name="access_key" value="cc7a3c5c-6eab-4676-a63d-06fe2f3f1559" />
             <input type="hidden" name="from_name" value="Wala Katha Contact Form" />
-            <!-- FIX 6: redirect_to — success redirect page නිශ්චිත කිරීම -->
             <input type="hidden" name="redirect" value="false" />
-            <!-- Honeypot spam protection -->
             <input type="checkbox" name="botcheck" class="hidden" style="display: none;" tabindex="-1" autocomplete="off" />
 
-            <!-- FIX 1: id attributes add කිරීම — label for="" සමඟ match කිරීමට -->
             <div class="lg:col-6 contact-field-wrap">
               <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="name">
                 නම <span class="text-red-500" aria-hidden="true">*</span>
@@ -152,8 +145,6 @@ const contactPageSchema = {
                   required
                   autocomplete="name"
                 />
-                <!-- FIX 2: class → className නොව, Astro .astro files වල HTML class භාවිතා කළ යුතු -->
-                <!-- නමුත් React component නොවන බැවින් SVG icon inline use කරයි -->
                 <button
                   type="button"
                   class="clear-btn absolute right-3 text-gray-500 hover:text-red-500 hidden transition-all z-10"
@@ -195,7 +186,6 @@ const contactPageSchema = {
               <p class="field-error hidden mt-1 text-xs text-red-500">වලංගු විද්‍යුත් තැපැල් ලිපිනයක් ඇතුළත් කරන්න.</p>
             </div>
 
-            <!-- FIX 5: Subject — empty submission වළකන්නට default subject JS වලින් inject කෙරේ -->
             <div class="col-12 contact-field-wrap">
               <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="subject">
                 විෂය
@@ -226,7 +216,6 @@ const contactPageSchema = {
               <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="message">
                 පණිවිඩය <span class="text-red-500" aria-hidden="true">*</span>
               </label>
-              <!-- FIX 4: textarea selector — form-input class add කිරීම JS selector එකට match වෙන්නට -->
               <div class="relative">
                 <textarea
                   id="message"
@@ -270,7 +259,7 @@ const contactPageSchema = {
   </section>
 
   <script is:inline>
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("astro:page-load", () => {
       const form = document.getElementById("smart-contact-form");
       const successAlert = document.getElementById("form-success-alert");
       const errorAlert = document.getElementById("form-error-alert");
@@ -279,7 +268,6 @@ const contactPageSchema = {
       const submitBtnText = document.getElementById("submit-btn-text");
       const submitSpinner = document.getElementById("submit-spinner");
 
-      // FIX 4: Unified selector — form-input class textarea සහ input දෙකටම apply වේ
       const fieldWraps = document.querySelectorAll(".contact-field-wrap");
 
       fieldWraps.forEach(wrap => {
@@ -289,10 +277,8 @@ const contactPageSchema = {
 
         if (!input || !clearBtn) return;
 
-        // Clear button toggle on input
         input.addEventListener("input", () => {
           clearBtn.classList.toggle("hidden", input.value.length === 0);
-          // Validate on type — error hide on input
           if (fieldError) fieldError.classList.add("hidden");
           input.classList.remove("border-red-500");
         });
@@ -305,13 +291,11 @@ const contactPageSchema = {
         });
       });
 
-      // Alert hide helper
       function hideAlerts() {
         successAlert.classList.add("hidden");
         errorAlert.classList.add("hidden");
       }
 
-      // Field validation
       function validateForm() {
         let valid = true;
 
@@ -319,7 +303,6 @@ const contactPageSchema = {
         const emailInput = document.getElementById("email");
         const messageInput = document.getElementById("message");
 
-        // Name
         const nameWrap = nameInput.closest(".contact-field-wrap");
         const nameError = nameWrap.querySelector(".field-error");
         if (!nameInput.value.trim()) {
@@ -328,7 +311,6 @@ const contactPageSchema = {
           valid = false;
         }
 
-        // Email
         const emailWrap = emailInput.closest(".contact-field-wrap");
         const emailError = emailWrap.querySelector(".field-error");
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -338,7 +320,6 @@ const contactPageSchema = {
           valid = false;
         }
 
-        // Message
         const messageWrap = messageInput.closest(".contact-field-wrap");
         const messageError = messageWrap.querySelector(".field-error");
         if (!messageInput.value.trim()) {
@@ -357,7 +338,6 @@ const contactPageSchema = {
 
           if (!validateForm()) return;
 
-          // Submit button loading state
           submitBtn.disabled = true;
           submitBtnText.textContent = "යවමින්...";
           submitSpinner.classList.remove("hidden");
@@ -366,12 +346,10 @@ const contactPageSchema = {
           const object = {};
           formData.forEach((value, key) => { object[key] = value; });
 
-          // FIX 5: Subject empty නම් default subject inject කිරීම
           if (!object["subject"] || !object["subject"].trim()) {
             object["subject"] = "Wala Katha - නව සම්බන්ධතා පණිවිඩය";
           }
 
-          // FIX 7: replyto — user email reply address ලෙස set කිරීම
           object["replyto"] = object["email"];
 
           const json = JSON.stringify(object);
@@ -389,7 +367,6 @@ const contactPageSchema = {
             const result = await response.json();
 
             if (response.ok && result.success) {
-              // FIX 3: flex + hidden conflict නැත — JS වලින් display control
               successAlert.classList.remove("hidden");
               successAlert.scrollIntoView({ behavior: "smooth", block: "nearest" });
               form.reset();

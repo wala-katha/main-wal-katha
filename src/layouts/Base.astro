@@ -53,71 +53,71 @@ const finalImageUrl = image
     ? image
     : `${cleanBaseUrl}${image.startsWith("/") ? image : "/" + image}`
   : `${cleanBaseUrl}${config.metadata.meta_image.startsWith("/") ? config.metadata.meta_image : "/" + config.metadata.meta_image}`;
+
+// ✅ Font preconnect — Astro Font component use කරන origins පමණයි
+const usesGoogleFonts = fontEntries.length > 0;
 ---
 
 <!doctype html>
 <html lang="si" class="bg-[#010203]">
   <head>
-    <!-- ✅ Charset & Viewport FIRST (render critical) -->
+    <!-- 1️⃣ Charset & Viewport — MUST be first -->
     <meta charset="UTF-8" />
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=5"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
 
-    <!-- ✅ DNS Prefetch + Preconnect (reduces font/resource latency) -->
-    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- 2️⃣ Critical inline CSS — render-blocking flash වළකන්න -->
+    <style>
+      html, body {
+        background-color: #010203;
+        color: #f8f8ff;
+        margin: 0;
+        padding: 0;
+      }
+      #main-content { min-height: 60vh; }
+    </style>
 
-    <!-- ✅ Favicon -->
+    <!-- 3️⃣ Favicon -->
     <link rel="shortcut icon" href={config.site.favicon} />
 
-    <!-- ✅ Theme & Generator -->
-    <meta name="theme-name" content="bookworm-light-astro" />
-    <meta name="msapplication-TileColor" content="#010203" />
+    <!-- 4️⃣ Google Fonts preconnect — fonts use කරනවා නම් පමණයි -->
+    {usesGoogleFonts && (
+      <>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+      </>
+    )}
+
+    <!-- 5️⃣ Font preload — LCP font block වීම වළකන්න -->
+    {fontEntries.map(([key]) => {
+      const cssVar = `--font-${key}` as any;
+      return <Font cssVariable={cssVar} preload />;
+    })}
+
+    <!-- 6️⃣ Theme meta -->
     <meta name="theme-color" content="#010203" />
-    <meta
-      name="theme-color"
-      media="(prefers-color-scheme: light)"
-      content="#010203"
-    />
-    <meta
-      name="theme-color"
-      media="(prefers-color-scheme: dark)"
-      content="#010203"
-    />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#010203" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#010203" />
+    <meta name="msapplication-TileColor" content="#010203" />
+    <meta name="theme-name" content="bookworm-light-astro" />
     <meta name="generator" content={Astro.generator} />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
-    <!-- ✅ Font preload (critical - above fold) -->
-    {
-      fontEntries.map(([key]) => {
-        const cssVar = `--font-${key}` as any;
-        return <Font cssVariable={cssVar} preload />;
-      })
-    }
-
-    <!-- ✅ Title & Canonical -->
+    <!-- 7️⃣ Title & Canonical -->
     <title>{calculatedTitle}</title>
     <link rel="canonical" href={currentCanonical} />
 
-    <!-- ✅ Robots -->
-    {
-      noindex ? (
-        <meta name="robots" content="noindex,nofollow" />
-      ) : (
-        <meta name="robots" content="index,follow,max-image-preview:large" />
-      )
+    <!-- 8️⃣ Robots -->
+    {noindex
+      ? <meta name="robots" content="noindex,nofollow" />
+      : <meta name="robots" content="index,follow,max-image-preview:large" />
     }
 
-    <!-- ✅ Core SEO Meta -->
+    <!-- 9️⃣ Core SEO -->
     <meta name="description" content={calculatedDescription} />
     <meta name="keywords" content={siteKeywords} />
     <meta name="author" content={config.metadata.meta_author} />
 
-    <!-- ✅ Open Graph -->
+    <!-- 🔟 Open Graph -->
     <meta property="og:title" content={calculatedTitle} />
     <meta property="og:description" content={calculatedDescription} />
     <meta property="og:type" content="website" />
@@ -129,30 +129,17 @@ const finalImageUrl = image
     <meta property="og:image:height" content="630" />
     <meta property="og:site_name" content={config.site.title} />
 
-    <!-- ✅ Twitter Cards -->
+    <!-- 1️⃣1️⃣ Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={calculatedTitle} />
     <meta name="twitter:description" content={calculatedDescription} />
     <meta name="twitter:image" content={finalImageUrl} />
 
-    <!-- ✅ View Transitions (deferred - non-blocking) -->
+    <!-- 1️⃣2️⃣ ClientRouter — සියල්ලටම පසුව, reflow minimize කිරීමට -->
     <ClientRouter />
-
-    <!-- ✅ Critical inline CSS to prevent render-blocking flash -->
-    <style>
-      html,
-      body {
-        background-color: #010203;
-        color: #f8f8ff;
-        margin: 0;
-        padding: 0;
-      }
-    </style>
   </head>
 
-  <body
-    class="bg-[#010203] text-[#F8F8FF] min-h-screen flex flex-col antialiased selection:bg-[#01AD9F]/30 selection:text-[#01AD9F]"
-  >
+  <body class="bg-[#010203] text-[#F8F8FF] min-h-screen flex flex-col antialiased selection:bg-[#01AD9F]/30 selection:text-[#01AD9F]">
     <TwSizeIndicator />
     <Header />
     <main id="main-content" class="min-h-[60vh] flex-1">

@@ -28,31 +28,46 @@ jobs:
           import { createRequire } from 'module';
           const require = createRequire('/tmp/sharp-tool/package.json');
           const sharp = require('sharp');
-          import { readdirSync } from 'fs';
+          import { readdirSync, existsSync } from 'fs';
 
           const folders = [
-            { dir: 'public/images/authors', width: 400, height: 400, lossless: true },
-            { dir: 'public/images/slider', width: 1200, height: 450, lossless: true },
+            // Authors: 25x25 display → 50x50 optimal (2x retina)
+            { dir: 'public/images/authors', width: 50, height: 50, lossless: false, quality: 90 },
+            // Slider: 882x331 display → 900x338 optimal
+            { dir: 'public/images/slider', width: 900, height: 338, lossless: false, quality: 90 },
+            // Posts: optimize existing JPGs
+            { dir: 'public/images/posts', width: 750, height: 500, lossless: false, quality: 85 },
           ];
 
-          for (const { dir, width, height, lossless } of folders) {
+          for (const { dir, width, height, lossless, quality } of folders) {
+            if (!existsSync(dir)) continue;
             for (const file of readdirSync(dir)) {
               if (/\.(jpg|jpeg|png)$/i.test(file)) {
+                const input = dir + '/' + file;
                 const out = dir + '/' + file.replace(/\.[^.]+$/, '.webp');
-                await sharp(dir + '/' + file)
+                await sharp(input)
                   .resize(width, height, {
                     fit: 'cover',
                     kernel: sharp.kernel.lanczos3,
+                    withoutEnlargement: true,
                   })
-                  .webp({
-                    quality: 100,
-                    lossless: true,
-                    effort: 6,
-                  })
+                  .webp({ quality, effort: 6 })
                   .toFile(out);
-                console.log('Done:', dir + '/' + file, '->', out);
+                console.log('Done:', input, '->', out);
               }
             }
+          }
+
+          // Logo separate — maintain aspect ratio
+          if (existsSync('public/images/logo.png')) {
+            await sharp('public/images/logo.png')
+              .resize(300, null, {
+                kernel: sharp.kernel.lanczos3,
+                withoutEnlargement: true,
+              })
+              .webp({ quality: 90, effort: 6 })
+              .toFile('public/images/logo.webp');
+            console.log('Done: logo.png -> logo.webp');
           }
           EOF
 
@@ -60,7 +75,9 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add public/images/authors/*.webp
-          git add public/images/slider/*.webp
-          git diff --staged --quiet || git commit -m "Auto: optimize all images to WebP lossless"
+          git add public/images/authors/*.webp || true
+          git add public/images/slider/*.webp || true
+          git add public/images/posts/*.webp || true
+          git add public/images/logo.webp || true
+          git diff --staged --quiet || git commit -m "Auto: optimize all images with correct display sizes"
           git push

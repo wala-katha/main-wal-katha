@@ -85,5 +85,6 @@ jobs:
           git add public/images/slider/*.webp || true
           git add public/images/posts/*.webp || true
           git add public/images/logo.webp || true
+          git add public/images/favicon/*.webp || true
           git diff --staged --quiet || git commit -m "Auto: optimize images with sharpening"
           git push
